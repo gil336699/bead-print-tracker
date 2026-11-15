@@ -110,6 +110,11 @@
   .per{margin-top:8px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .per b{color:var(--ink);min-width:24px;text-align:center;font-size:17px}
   .per span{font-size:11.5px;flex-basis:100%}
+  .addp{margin-top:10px;padding:10px 12px;border-radius:var(--r-md);background:var(--chip);display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+  .addp strong{flex-basis:100%;color:var(--ink);font-size:13px}
+  .addp input{width:72px;min-height:44px;padding:0 10px;border-radius:99px;border:1px solid var(--glass-line);background:var(--glass-strong);color:var(--ink);font:inherit;font-size:16px;text-align:center}
+  .addp button{min-height:44px}
+  .addp button.ghost{background:transparent;box-shadow:none;color:var(--muted)}
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
   .chip{font-size:12px;background:var(--chip);border-radius:99px;padding:3px 10px;color:var(--muted)}
   .chip b{color:var(--ink)}
@@ -350,6 +355,14 @@ function render(){
         <div class="per">Beads per plate
           <button data-step="-1" data-g="${g.id}">−</button><b>${n}</b><button data-step="1" data-g="${g.id}">+</button>
           <span>(sets the size of plates you tap next)</span></div>
+        <div class="addp"><strong>Already printed? Type it in</strong>
+          <input class="ip" type="number" inputmode="numeric" min="1" placeholder="plates" aria-label="Number of plates">
+          <span>plates ×</span>
+          <input class="ib" type="number" inputmode="numeric" min="1" max="${g.cap}" value="${n}" aria-label="Beads on each plate">
+          <span>beads</span>
+          <button data-add="${g.id}">Add</button>
+          ${d?`<button class="ghost" data-clear="${g.id}">Clear</button>`:""}
+        </div>
         <div class="chips">${chips}</div>`;
       host.appendChild(card);
     });
@@ -374,6 +387,20 @@ document.addEventListener("click",e=>{
     const c=sb.dataset.c, sp=st.spools[c]=st.spools[c]||{k:0,q:0};
     sp[sb.dataset.spool]=Math.max(0,sp[sb.dataset.spool]+ +sb.dataset.d);
     save(); render(); return;
+  }
+  const addB = e.target.closest("[data-add]");
+  if(addB){
+    const g = groups.find(x=>x.id===addB.dataset.add), card=addB.closest(".card");
+    const np = Math.floor(+card.querySelector(".ip").value), nb = Math.min(g.cap, Math.floor(+card.querySelector(".ib").value));
+    if(!(np>=1 && nb>=1)){ card.querySelector(".ip").focus(); return; }
+    const arr = (st.printed[g.id]||[]).slice(); let rem = g.total - sum(arr);
+    for(let i=0;i<np && rem>0;i++){ const c=Math.min(nb,rem); arr.push(c); rem-=c; }
+    st.printed[g.id]=arr; save(); render(); return;
+  }
+  const clrB = e.target.closest("[data-clear]");
+  if(clrB){
+    if(confirm("Clear all printed plates for this color?")){ st.printed[clrB.dataset.clear]=[]; save(); render(); }
+    return;
   }
   const stp = e.target.closest("[data-step]");
   if(stp){
