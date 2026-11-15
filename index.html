@@ -83,6 +83,9 @@
   .spools button{padding:0 9px;line-height:24px;border-radius:8px}
   .status{font-size:13px;font-weight:600;padding:6px 10px;border-radius:10px;background:var(--bg)}
   .status.ok{color:var(--done)} .status.bad{color:var(--accent)}
+  .syncbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:-8px 0 16px}
+  .pill{font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;background:var(--todo);color:var(--muted)}
+  .pill.live{background:#dff3e8;color:var(--done)} .pill.err{background:#fbe0e6;color:var(--accent)}
   .foot{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:13px}
   button{font:inherit;border:1px solid var(--line);background:var(--card);padding:6px 14px;border-radius:10px;cursor:pointer}
   button:hover{background:var(--todo)}
@@ -91,7 +94,9 @@
 <body>
 <div class="wrap">
   <h1>🧵 Bead Print Tracker</h1>
-  <div class="sub">Tap a plate when it finishes printing. Printed fewer beads on a plate? Use the − / + on that color first. Tap the last green plate again to undo. Progress saves automatically. Turn on <b>Track filament</b> to see grams and spools.</div>
+  <div class="sub">Tap a plate when it finishes printing. Printed fewer beads on a plate? Use the − / + on that color first. Tap the last green plate again to undo. Progress saves automatically and, when sharing is on, updates live for everyone with the link. Turn on <b>Track filament</b> to see grams and spools.</div>
+
+  <div class="syncbar"><span id="syncPill" class="pill">Local only</span><button id="shareBtn" style="display:none">🔗 Copy share link</button></div>
 
   <label class="toggle"><input type="checkbox" id="filToggle"> Track filament <small>(optional)</small></label>
 
@@ -164,7 +169,7 @@ ORDERS.forEach(([ch,color,size,qty])=>{
 let st = {printed:{}, per:{}};
 try{ st = JSON.parse(localStorage.getItem(KEY)) || st; }catch(e){}
 st.spools = st.spools||{}; st.filOn = !!st.filOn;
-const save = ()=>localStorage.setItem(KEY, JSON.stringify(st));
+const save = ()=>{ localStorage.setItem(KEY, JSON.stringify(st)); pushSync(); };
 const sum = a=>a.reduce((x,y)=>x+y,0);
 const perOf = g => Math.min(g.cap, Math.max(1, st.per[g.id]||g.cap));
 
@@ -303,6 +308,68 @@ document.addEventListener("click",e=>{
 document.getElementById("reset").onclick=()=>{
   if(confirm("Reset all printing progress?")){ st.printed={}; st.per={}; save(); render(); }
 };
+
+/* ===== shared live sync (Firebase Realtime Database) =====
+   Paste your Firebase web config here to turn sharing on. Leave null for local-only mode. */
+const FIREBASE_CONFIG = null;
+
+const safeKey = s=>s.replace(/[^A-Za-z0-9]/g,"_");
+let sync=null, flatPrev={};
+const pill=(t,c)=>{ const el=document.getElementById("syncPill"); el.textContent=t; el.className="pill "+(c||""); };
+function flat(){
+  const o={};
+  groups.forEach(g=>{
+    const pr=st.printed[g.id]; if(pr&&pr.length) o["printed/"+safeKey(g.id)]=pr;
+    if(st.per[g.id]) o["per/"+safeKey(g.id)]=st.per[g.id];
+  });
+  Object.entries(st.spools).forEach(([c,sp])=>{ if(sp.k||sp.q) o["spools/"+safeKey(c)]={k:sp.k,q:sp.q}; });
+  return o;
+}
+function pushSync(){
+  if(!sync) return;
+  const cur=flat(), up={};
+  for(const k in cur) if(JSON.stringify(cur[k])!==JSON.stringify(flatPrev[k])) up[k]=cur[k];
+  for(const k in flatPrev) if(!(k in cur)) up[k]=null;
+  flatPrev=cur;
+  if(Object.keys(up).length) sync.update(sync.ref,up).catch(()=>pill("Sync error","err"));
+}
+function applyRemote(v){
+  const arr=x=>Array.isArray(x)?x:Object.values(x||{});
+  st.printed={}; st.per={}; st.spools={};
+  groups.forEach(g=>{
+    const k=safeKey(g.id);
+    if(v.printed&&v.printed[k]) st.printed[g.id]=arr(v.printed[k]);
+    if(v.per&&v.per[k]) st.per[g.id]=v.per[k];
+  });
+  colorList.forEach(c=>{ const sp=v.spools&&v.spools[safeKey(c)]; if(sp) st.spools[c]={k:sp.k||0,q:sp.q||0}; });
+  localStorage.setItem(KEY, JSON.stringify(st));
+  flatPrev=flat();
+}
+(async function startSync(){
+  if(!FIREBASE_CONFIG) return;
+  let room=(location.hash.match(/room=([\w-]+)/)||[])[1] || localStorage.getItem(KEY+".room");
+  if(!room) room=Array.from(crypto.getRandomValues(new Uint8Array(9)),b=>b.toString(36).padStart(2,"0")).join("").slice(0,14);
+  localStorage.setItem(KEY+".room",room);
+  history.replaceState(null,"","#room="+room);
+  try{
+    const V="10.14.1";
+    const [{initializeApp},{getDatabase,ref,onValue,update}] = await Promise.all([
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`),
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-database.js`)]);
+    const db=getDatabase(initializeApp(FIREBASE_CONFIG));
+    sync={update, ref:ref(db,"rooms/"+room)};
+    pill("Connecting…");
+    let first=true;
+    onValue(sync.ref, snap=>{
+      const v=snap.val();
+      if(first && !v){ flatPrev={}; pushSync(); }          // empty room: seed it with what this device has
+      else if(v){ applyRemote(v); }
+      first=false; pill("● Live · shared","live"); render();
+    }, ()=>pill("Sync error","err"));
+    const b=document.getElementById("shareBtn"); b.style.display="";
+    b.onclick=()=>navigator.clipboard.writeText(location.href).then(()=>{b.textContent="✓ Copied!";setTimeout(()=>b.textContent="🔗 Copy share link",1500)});
+  }catch(e){ pill("Sync error","err"); }
+})();
 render();
 </script>
 </body>
