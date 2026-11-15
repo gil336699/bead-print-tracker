@@ -395,7 +395,15 @@ document.getElementById("reset").onclick=()=>{
 
 /* ===== shared live sync (Firebase Realtime Database) =====
    Paste your Firebase web config here to turn sharing on. Leave null for local-only mode. */
-const FIREBASE_CONFIG = null;
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBAOQ1QT_VBCOw2D657EvbiP3oVU4x4fwQ",
+  authDomain: "bead-tracker-6a892.firebaseapp.com",
+  databaseURL: "https://bead-tracker-6a892-default-rtdb.firebaseio.com",
+  projectId: "bead-tracker-6a892",
+  storageBucket: "bead-tracker-6a892.firebasestorage.app",
+  messagingSenderId: "24528293054",
+  appId: "1:24528293054:web:2110935c954cac2e3ca2ef"
+};
 
 const safeKey = s=>s.replace(/[^A-Za-z0-9]/g,"_");
 let sync=null, flatPrev={};
