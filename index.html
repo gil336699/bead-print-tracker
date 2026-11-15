@@ -4,228 +4,380 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Beads">
-<meta name="theme-color" content="#ffe6ef" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1c1840" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#fde6ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1730" media="(prefers-color-scheme: dark)">
 <title>Bead Print Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧵</text></svg>">
 <style>
   :root{
     color-scheme: light dark;
-    --ink:#1d1b20; --muted:#6b6672; --accent:#e0457b; --done:#2fa866; --done2:#52c98a;
-    --glass:rgba(255,255,255,.52); --glass-strong:rgba(255,255,255,.72); --glass-line:rgba(255,255,255,.75);
-    --glass-shadow:0 10px 30px rgba(60,40,90,.12), 0 1px 3px rgba(60,40,90,.08);
-    --todo:rgba(120,110,140,.12); --chip:rgba(120,110,140,.12);
-    --bg1:#ffe6ef; --bg2:#e8e1ff; --bg3:#dff3ff; --bg4:#fff0d9;
-    --r-lg:30px; --pad:16px; --r-md:calc(var(--r-lg) - var(--pad));
+    --ink:#1c1a21; --muted:#5f5a69; --faint:#8f8a98;
+    --accent:#d63b72; --done:#23955a; --done2:#46c27f; --warn:#c2410c;
+    --glass:rgba(255,255,255,.58); --glass-2:rgba(255,255,255,.78); --solid:#fbf8fc;
+    --line:rgba(255,255,255,.85); --edge:rgba(60,40,90,.10); --hi:rgba(255,255,255,.65);
+    --shadow:0 12px 32px rgba(60,40,90,.11), 0 1px 3px rgba(60,40,90,.08);
+    --fill:rgba(110,100,135,.12);
+    --bg1:#ffe1ed; --bg2:#e6deff; --bg3:#d9f0ff; --bg4:#ffefd2;
+    --r-xl:30px; --pad:16px; --r-md:calc(var(--r-xl) - var(--pad));
     --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
     --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --ink:#f4f1f8; --muted:#a7a1b3; --accent:#ff6b9d; --done:#34c77b; --done2:#5fe0a0;
-      --glass:rgba(40,36,52,.50); --glass-strong:rgba(54,48,70,.72); --glass-line:rgba(255,255,255,.16);
-      --glass-shadow:0 10px 30px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.3);
-      --todo:rgba(255,255,255,.10); --chip:rgba(255,255,255,.10);
-      --bg1:#2a1530; --bg2:#1c1840; --bg3:#102536; --bg4:#2f2214;
+      --ink:#f5f2f9; --muted:#b0aabb; --faint:#8a8496;
+      --accent:#ff6b9d; --done:#2fbf72; --done2:#62e0a0; --warn:#ff9a5c;
+      --glass:rgba(38,34,52,.58); --glass-2:rgba(56,50,74,.80); --solid:#26222f;
+      --line:rgba(255,255,255,.13); --edge:rgba(255,255,255,.08); --hi:rgba(255,255,255,.10);
+      --shadow:0 12px 32px rgba(0,0,0,.38), 0 1px 3px rgba(0,0,0,.3);
+      --fill:rgba(255,255,255,.09);
+      --bg1:#2b1431; --bg2:#1b1742; --bg3:#0f2536; --bg4:#2e2113;
     }
   }
+
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html{-webkit-text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   body{
     margin:0;color:var(--ink);min-height:100vh;min-height:100dvh;
-    font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
-    padding:calc(14px + var(--sat)) calc(14px + var(--sar)) calc(28px + var(--sab)) calc(14px + var(--sal));
-    background:
-      radial-gradient(60vmax 60vmax at 8% 0%, var(--bg1), transparent 60%),
-      radial-gradient(55vmax 55vmax at 100% 10%, var(--bg2), transparent 60%),
-      radial-gradient(60vmax 60vmax at 0% 100%, var(--bg3), transparent 60%),
-      radial-gradient(60vmax 60vmax at 100% 100%, var(--bg4), transparent 60%),
-      color-mix(in srgb, var(--bg1) 50%, var(--bg3));
-    background-attachment:fixed;
+    font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:calc(8px + var(--sat)) calc(14px + var(--sar)) calc(40px + var(--sab)) calc(14px + var(--sal));
     touch-action:manipulation;
   }
-  .wrap{max-width:1100px;margin:0 auto}
-  h1{margin:6px 4px 2px;font-size:clamp(24px,6vw,32px);letter-spacing:-.02em}
-  .sub{color:var(--muted);margin:0 4px 14px;font-size:15px}
-
-  /* glass surfaces */
-  .glass,.hero,.card,.topbar,.toggle,.stat,.status{
-    -webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
+  /* fixed background layer (iOS Safari ignores background-attachment:fixed) */
+  body::before{
+    content:"";position:fixed;inset:-10vmax;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(55vmax 55vmax at 15% 10%, var(--bg1), transparent 62%),
+      radial-gradient(50vmax 50vmax at 90% 15%, var(--bg2), transparent 62%),
+      radial-gradient(55vmax 55vmax at 10% 90%, var(--bg3), transparent 62%),
+      radial-gradient(55vmax 55vmax at 90% 90%, var(--bg4), transparent 62%),
+      var(--solid);
   }
-  .hero,.card,.topbar,.toggle{
-    background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.45);
+  .wrap{max-width:1120px;margin:0 auto}
+  [hidden]{display:none !important}
+
+  /* materials: content cards are frosted, the floating layer is clearer glass */
+  .mat{
+    background:var(--glass);border:1px solid var(--line);
+    -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);
+    box-shadow:var(--shadow), inset 0 1px 0 var(--hi);
   }
-
-  /* sticky progress */
-  .topbar{position:sticky;top:calc(8px + var(--sat));z-index:20;border-radius:99px;padding:8px 16px 10px;margin-bottom:14px}
-  .topbar .row{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;gap:10px}
-  .topbar b{font-size:17px;font-variant-numeric:tabular-nums}
-  .topbar span{min-width:0;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
-  .topbar .bar{height:8px;margin-top:6px}
-
-  .hero{display:flex;gap:22px;align-items:center;flex-wrap:wrap;border-radius:var(--r-lg);padding:var(--pad);margin-bottom:22px}
-  .ring{position:relative;width:132px;height:132px;flex:none;margin:4px auto}
-  .ring svg{transform:rotate(-90deg);width:100%;height:100%}
-  .ring circle:first-child{stroke:var(--todo)}
-  .ring .pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .ring .pct b{font-size:30px;line-height:1;letter-spacing:-.02em}
-  .ring .pct span{font-size:12px;color:var(--muted)}
-  .stats,#filStats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;flex:1;min-width:240px}
-  .stat{background:var(--glass-strong);border:1px solid var(--glass-line);border-radius:var(--r-md);padding:10px 14px}
-  .stat b{display:block;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-  .stat span{font-size:12.5px;color:var(--muted)}
-  .stat.good b{color:var(--done)} .stat.warn b{color:var(--accent)}
-  #filStats{display:none;flex-basis:100%}
-  .fil #filStats{display:grid}
-  .bar{height:12px;background:var(--todo);border-radius:99px;overflow:hidden}
-  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--done),var(--done2));border-radius:99px;transition:width .35s}
-  .hero .wide{flex-basis:100%}
-  .hero .wide small{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:5px}
-
-  h2{font-size:19px;margin:26px 6px 12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;letter-spacing:-.01em}
-  h2 small{font-weight:400;color:var(--muted);font-size:13px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:14px}
-
-  .card{border-radius:var(--r-lg);padding:var(--pad);position:relative;transition:box-shadow .25s,border-color .25s}
-  .card.next{border-color:var(--accent);box-shadow:var(--glass-shadow),0 0 0 3px color-mix(in srgb,var(--accent) 28%,transparent)}
-  .card.complete{opacity:.7}
-  .badge{position:absolute;top:-10px;right:16px;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700;padding:3px 11px;border-radius:99px;letter-spacing:.03em;box-shadow:0 2px 8px rgba(0,0,0,.18)}
-  .badge.ok{background:var(--done)}
-  .head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-  .dot{width:44px;height:44px;border-radius:50%;border:1px solid rgba(0,0,0,.18);flex:none;box-shadow:inset 0 -7px 12px rgba(0,0,0,.14), inset 0 5px 9px rgba(255,255,255,.5), 0 2px 6px rgba(0,0,0,.12)}
-  .head h3{margin:0;font-size:18px;letter-spacing:-.01em}
-  .head p{margin:0;color:var(--muted);font-size:13px}
-  .mini{margin-left:auto;text-align:right;font-size:12.5px;color:var(--muted)}
-  .mini b{display:block;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
-
-  .plates{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:8px;margin:12px 0}
-  .plate{min-height:54px;border-radius:var(--r-md);border:1px solid var(--glass-line);background:var(--todo);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--muted);user-select:none;-webkit-user-select:none;transition:transform .12s,background .2s;box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
-  .plate:active{transform:scale(.92)}
-  @media (hover:hover){ .plate:hover{transform:translateY(-2px)} }
-  .plate b{font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
-  .plate.done{background:linear-gradient(160deg,var(--done2),var(--done));border-color:rgba(255,255,255,.55);color:#eafff3;box-shadow:0 3px 10px color-mix(in srgb,var(--done) 45%,transparent), inset 0 1px 0 rgba(255,255,255,.55)}
-  .plate.done b{color:#fff}
-  .plate.partial:not(.done){border-style:dashed;border-color:var(--muted)}
-
-  .per{margin-top:8px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .per b{color:var(--ink);min-width:24px;text-align:center;font-size:17px}
-  .per span{font-size:11.5px;flex-basis:100%}
-  .addp{margin-top:10px;padding:10px 12px;border-radius:var(--r-md);background:var(--chip);display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-  .addp strong{flex-basis:100%;color:var(--ink);font-size:13px}
-  .addp input{width:72px;min-height:44px;padding:0 10px;border-radius:99px;border:1px solid var(--glass-line);background:var(--glass-strong);color:var(--ink);font:inherit;font-size:16px;text-align:center}
-  .addp button{min-height:44px}
-  .addp button.ghost{background:transparent;box-shadow:none;color:var(--muted)}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .chip{font-size:12px;background:var(--chip);border-radius:99px;padding:3px 10px;color:var(--muted)}
-  .chip b{color:var(--ink)}
+  .float{
+    background:var(--glass-2);border:1px solid var(--line);
+    -webkit-backdrop-filter:blur(30px) saturate(190%);backdrop-filter:blur(30px) saturate(190%);
+    box-shadow:0 10px 30px rgba(40,20,70,.16), inset 0 1px 0 var(--hi);
+  }
 
   /* buttons */
-  button{font:inherit;color:var(--ink);border:1px solid var(--glass-line);background:var(--glass-strong);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:8px 16px;border-radius:99px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.4);transition:transform .12s}
-  button:active{transform:scale(.94)}
-  .per button,.spools button{min-width:44px;min-height:44px;padding:0;font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
-  button:focus-visible,.plate:focus-visible,.switch:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:2px}
+  button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0;margin:0}
+  button:disabled{cursor:default;opacity:.35}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 18px;
+    border-radius:99px;border:1px solid var(--line);background:var(--glass-2);color:var(--ink);font-weight:600;
+    box-shadow:0 1px 3px rgba(0,0,0,.08), inset 0 1px 0 var(--hi);transition:transform .12s;
+  }
+  .btn.small{min-height:36px;padding:0 14px;font-size:14px}
+  .btn.ghost{background:transparent;box-shadow:none}
+  .btn.round{width:44px;height:44px;min-height:0;padding:0;font-size:22px;line-height:1;font-weight:500}
+  .btn.primary{
+    width:100%;min-height:54px;font-size:17px;font-weight:700;color:#fff;border-color:rgba(255,255,255,.45);
+    background:linear-gradient(180deg,var(--done2),var(--done));
+    box-shadow:0 8px 20px color-mix(in srgb,var(--done) 38%,transparent), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  button:not(:disabled):active{transform:scale(.96)}
+  button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
 
-  /* sync + toggle */
-  .syncbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 2px 12px}
-  .pill{font-size:12.5px;font-weight:700;padding:6px 14px;border-radius:99px;background:var(--glass);border:1px solid var(--glass-line);color:var(--muted);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-  .pill.live{color:var(--done)} .pill.err{color:var(--accent)}
-  .toggle{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 14px;padding:12px 18px;border-radius:99px;font-weight:600;cursor:pointer}
-  .toggle small{font-weight:400;color:var(--muted)}
-  .switch{-webkit-appearance:none;appearance:none;flex:none;width:51px;height:31px;border-radius:99px;background:var(--todo);border:1px solid var(--glass-line);position:relative;cursor:pointer;transition:background .25s;margin:0}
-  .switch::after{content:"";position:absolute;top:1px;left:1px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.3);transition:transform .25s}
-  .switch:checked{background:var(--done)}
-  .switch:checked::after{transform:translateX(20px)}
+  /* sticky progress */
+  .topbar{position:sticky;top:calc(6px + var(--sat));z-index:30;border-radius:99px;padding:9px 18px 11px;margin:0 0 12px}
+  .tb-row{display:flex;align-items:center;gap:10px;font-size:14px;min-width:0}
+  .tb-row b{font-size:17px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  #tbTxt{flex:1;min-width:0;color:var(--muted);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+  .live{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none}
+  .live.on{background:var(--done);box-shadow:0 0 0 3px color-mix(in srgb,var(--done) 25%,transparent)}
+  .live.off{background:var(--warn)}
+  .bar{height:10px;background:var(--fill);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--done),var(--done2));border-radius:99px;transition:width .4s}
+  .topbar .bar{height:7px;margin-top:7px}
+
+  /* title */
+  .titlebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 4px 4px}
+  h1{margin:0;font-size:clamp(25px,6.6vw,32px);letter-spacing:-.025em;line-height:1.15;flex:1;min-width:0}
+  .titlebar .btn svg{flex:none}
+  .meta{position:relative;margin:2px 4px 14px}
+  .meta .help{margin:0}
+  .pill{position:absolute;top:2px;right:0;font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;color:var(--muted);white-space:nowrap}
+  .pill.on{color:var(--done)} .pill.off{color:var(--warn)}
+  .help{color:var(--muted);font-size:14.5px}
+  .help summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--muted);min-height:36px;border-radius:99px}
+  .help summary::-webkit-details-marker{display:none}
+  .help summary::before{content:"?";width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:13px;font-weight:700;background:var(--fill);color:var(--ink)}
+  .help[open] summary::before{content:"×"}
+  .help ul{margin:4px 0 0;padding-left:22px;line-height:1.5}
+  .help li{margin:2px 0}
+
+  /* top area */
+  .top{display:grid;gap:14px;margin-bottom:18px}
+  @media (min-width:880px){ .top{grid-template-columns:minmax(320px,1fr) 1.45fr;align-items:start} }
+  .card{border-radius:var(--r-xl);padding:var(--pad);position:relative;scroll-margin-top:calc(78px + var(--sat))}
+
+  /* up next */
+  .upnext{display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow),0 0 0 2px color-mix(in srgb,var(--accent) 55%,transparent),inset 0 1px 0 var(--hi)}
+  .upnext.alldone{box-shadow:var(--shadow),0 0 0 2px color-mix(in srgb,var(--done) 55%,transparent)}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+  .alldone .eyebrow{color:var(--done)}
+  .un-main{display:flex;align-items:center;gap:14px;min-width:0}
+  .dot{width:44px;height:44px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.18);box-shadow:inset 0 -7px 12px rgba(0,0,0,.15), inset 0 5px 9px rgba(255,255,255,.5), 0 2px 6px rgba(0,0,0,.12)}
+  .dot.lg{width:58px;height:58px}
+  .un-text{min-width:0;flex:1}
+  .pick{position:relative;display:inline-flex;align-items:center;gap:7px;max-width:100%;min-height:40px;border-radius:12px;padding-right:4px}
+  .pick-label{font-size:23px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pick .chev{color:var(--muted);font-size:13px;flex:none;margin-top:3px}
+  .pick select{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;border:0;font-size:16px;cursor:pointer;-webkit-appearance:none;appearance:none}
+  .pick:focus-within{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+  .un-text p{margin:0;color:var(--muted);font-size:14.5px;font-variant-numeric:tabular-nums}
+  .un-text p b{color:var(--ink)}
+  .beads{display:flex;flex-wrap:wrap;gap:6px}
+  .beads i{width:15px;height:15px;border-radius:50%;border:1.5px dashed var(--faint);flex:none}
+  .beads i.on{background:var(--c);border:1px solid rgba(0,0,0,.22);box-shadow:inset 0 -2px 3px rgba(0,0,0,.18), inset 0 2px 2px rgba(255,255,255,.55)}
+  .beads.small{gap:4px} .beads.small i{width:10px;height:10px}
+  .un-done{font-size:21px;font-weight:700;letter-spacing:-.01em}
+
+  /* overview */
+  .ov-top{display:flex;align-items:center;gap:16px}
+  .ring{position:relative;width:128px;height:128px;flex:none}
+  .ring svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+  .ring .track{stroke:var(--fill)}
+  .ring .fg{transition:stroke-dashoffset .5s}
+  .pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.15}
+  .pct b{font-size:30px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .pct span{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .tiles{flex:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+  @media (min-width:1000px){ .ov-top .tiles{grid-template-columns:repeat(4,minmax(0,1fr))} }
+  .tile{background:var(--glass-2);border:1px solid var(--line);border-radius:var(--r-md);padding:9px 12px;min-width:0}
+  .tile b{display:block;font-size:24px;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tile span{display:block;font-size:12px;color:var(--muted);line-height:1.25}
+  .tile.ok b{color:var(--done)} .tile.bad b{color:var(--warn)}
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:4px;margin-top:14px;padding-top:12px;border-top:1px solid var(--edge)}
+  .sw{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;border-radius:var(--r-md);min-width:0;transition:background .2s}
+  @media (hover:hover){ .sw:hover{background:var(--fill)} }
+  .sw:active{background:var(--fill)}
+  .sw-ring{position:relative;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
+    background:conic-gradient(var(--done) calc(var(--p) * 1%), var(--fill) 0)}
+  .sw-dot{width:34px;height:34px;border-radius:50%;border:1px solid rgba(0,0,0,.16);box-shadow:inset 0 -4px 7px rgba(0,0,0,.14), inset 0 3px 6px rgba(255,255,255,.45)}
+  .sw.fin .sw-ring::after{content:"✓";position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;background:var(--done);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid var(--solid)}
+  .sw-name{font-size:11.5px;font-weight:600;line-height:1.15;text-align:center;overflow-wrap:anywhere}
+  .sw-n{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  /* tabs (segmented control) */
+  .seg{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:99px;max-width:440px;margin:4px auto 6px}
+  .seg::before{content:"";position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:99px;background:var(--solid);
+    box-shadow:0 2px 10px rgba(0,0,0,.12), inset 0 1px 0 var(--hi);transition:transform .32s cubic-bezier(.3,.7,.2,1)}
+  .seg[data-pos="1"]::before{transform:translateX(100%)}
+  .seg button{position:relative;z-index:1;min-height:42px;border-radius:99px;font-weight:600;color:var(--muted);font-size:15px}
+  .seg button[aria-selected="true"],.seg button[aria-checked="true"]{color:var(--ink)}
+  .sortbar{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin:16px 6px 0}
+  .sortbar .flabel{font-size:13px}
+  .seg.mini{margin:0;max-width:none;padding:3px}
+  .seg.mini::before{top:3px;bottom:3px;left:3px;width:calc(50% - 3px)}
+  .seg.mini button{min-height:36px;padding:0 14px;font-size:13.5px;white-space:nowrap}
+
+  h2{font-size:19px;margin:22px 6px 12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;letter-spacing:-.01em}
+  h2 small{font-weight:400;color:var(--muted);font-size:13.5px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:14px}
+
+  /* color cards */
+  .card.next{box-shadow:var(--shadow),0 0 0 2px color-mix(in srgb,var(--accent) 60%,transparent),inset 0 1px 0 var(--hi)}
+  .card.flash{animation:flash 1.1s}
+  @keyframes flash{30%{box-shadow:var(--shadow),0 0 0 5px color-mix(in srgb,var(--accent) 45%,transparent)}}
+  .badge{position:absolute;top:-10px;right:18px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;padding:3px 11px;border-radius:99px;letter-spacing:.05em;text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .badge.ok{background:var(--done)}
+  .head{display:flex;align-items:center;gap:12px}
+  .ht{min-width:0;flex:1}
+  .ht h3{margin:0;font-size:18px;letter-spacing:-.01em}
+  .ht p{margin:1px 0 0;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .mini{text-align:right;font-size:12px;color:var(--muted);line-height:1.2;flex:none}
+  .mini b{display:block;font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .mini b.ok{color:var(--done)}
+  .card .bar{margin-top:12px}
+  .plates{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px;margin-top:12px}
+  .plate{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:54px;
+    border-radius:var(--r-md);background:var(--fill);border:1px solid var(--line);box-shadow:inset 0 1px 0 var(--hi);
+    color:var(--muted);font-size:10.5px;user-select:none;-webkit-user-select:none;transition:transform .12s, background .2s;
+  }
+  .plate b{font-size:17px;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums}
+  .plate.partial:not(.done){border:1.5px dashed var(--faint)}
+  .plate.done{background:linear-gradient(160deg,var(--done2),var(--done));border-color:rgba(255,255,255,.45);color:rgba(255,255,255,.9);
+    box-shadow:0 3px 10px color-mix(in srgb,var(--done) 38%,transparent), inset 0 1px 0 rgba(255,255,255,.5)}
+  .plate.done b{color:#fff}
+  .plate.pop{animation:pop .4s}
+  @keyframes pop{45%{transform:scale(1.14)}}
+  .note{margin:12px 0 0;font-size:13.5px;color:var(--muted)}
+  .adjust{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--edge)}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .flabel{font-size:12px;color:var(--muted);font-weight:600}
+  .inwrap{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+  .inwrap input{
+    width:88px;min-height:44px;padding:0 12px;border-radius:99px;border:1px solid var(--line);background:var(--glass-2);
+    color:var(--ink);font:inherit;font-size:17px;font-weight:600;text-align:center;font-variant-numeric:tabular-nums;
+    -moz-appearance:textfield;appearance:textfield;box-shadow:inset 0 1px 2px rgba(0,0,0,.06);
+  }
+  .inwrap input::-webkit-outer-spin-button,.inwrap input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .inwrap input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+  .inwrap input::placeholder{color:var(--faint);font-weight:500}
+  .stepper{display:inline-flex;align-items:center;gap:2px;background:var(--fill);border-radius:99px;padding:0}
+  .stepper b{min-width:30px;text-align:center;font-size:17px;font-variant-numeric:tabular-nums}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .chip{font-size:12px;background:var(--fill);border-radius:99px;padding:3px 10px;color:var(--muted)}
+  .chip b{color:var(--ink)}
 
   /* filament */
-  #filSection{display:none} .fil #filSection{display:block}
-  .fbar{position:relative;height:16px;background:var(--todo);border-radius:99px;margin:14px 0 8px;display:flex}
+  .fil-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  @media (min-width:720px){ .fil-tiles{grid-template-columns:repeat(4,minmax(0,1fr))} }
+  .shop{margin-top:12px;padding:11px 14px;border-radius:var(--r-md);font-size:14.5px;background:var(--glass-2);border:1px solid var(--line);line-height:1.45}
+  .shop.bad{color:var(--warn)} .shop.ok{color:var(--done)} .shop.none{color:var(--muted)}
+  .shop + .shop{margin-top:8px}
+  .shop-h{font-weight:700;margin-bottom:8px}
+  .fchips{display:flex;flex-wrap:wrap;gap:6px}
+  .fchip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 5px;border-radius:99px;background:var(--fill);color:var(--ink);font-size:13px;font-weight:500}
+  .fchip i{width:17px;height:17px;border-radius:50%;border:1px solid rgba(0,0,0,.18);flex:none}
+  .fchip b{font-weight:700}
+  .fchip.bad b{color:var(--warn)}
+  .hint{margin:10px 2px 0;font-size:12.5px;color:var(--muted)}
+  .fbar{position:relative;height:14px;border-radius:99px;background:var(--fill);margin:14px 0 8px;display:flex}
   .fbar i{display:block;height:100%}
-  .fbar i.u{background:linear-gradient(90deg,var(--done),var(--done2));border-radius:99px 0 0 99px}
-  .fbar i.t{opacity:.6;background-image:repeating-linear-gradient(45deg,transparent 0 5px,rgba(255,255,255,.6) 5px 9px);border:1px solid rgba(0,0,0,.14)}
-  .fbar .own{position:absolute;top:-5px;bottom:-5px;width:3px;background:var(--ink);border-radius:2px}
-  .legend{font-size:12px;color:var(--muted);display:flex;gap:6px 12px;flex-wrap:wrap}
+  .fbar .u{background:linear-gradient(90deg,var(--done),var(--done2));border-radius:99px 0 0 99px}
+  .fbar .t{background-color:var(--c);opacity:.7;background-image:repeating-linear-gradient(45deg,transparent 0 5px,rgba(255,255,255,.55) 5px 9px);box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)}
+  .fbar .own{position:absolute;top:-5px;bottom:-5px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--ink)}
+  .legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted)}
   .legend b{color:var(--ink)}
-  .spools{display:flex;gap:10px 18px;flex-wrap:wrap;margin:12px 0 8px;font-size:13px;color:var(--muted)}
-  .spools div{display:flex;align-items:center;gap:8px}
-  .spools b{color:var(--ink);min-width:20px;text-align:center;font-size:17px}
-  .status{font-size:13px;font-weight:600;padding:9px 14px;border-radius:var(--r-md);background:var(--glass-strong);border:1px solid var(--glass-line)}
-  .status.ok{color:var(--done)} .status.bad{color:var(--accent)}
+  .spools{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:12px;padding-top:12px;border-top:1px solid var(--edge)}
+  .status{margin-top:12px;padding:10px 14px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;background:var(--glass-2);border:1px solid var(--line)}
+  .status.ok{color:var(--done)} .status.bad{color:var(--warn)} .status.none{color:var(--muted);font-weight:500}
 
-  .foot{display:flex;gap:10px 14px;margin-top:28px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:13px;padding:0 4px}
+  .foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:30px;padding:0 4px;color:var(--muted);font-size:13px}
+
+  /* toast */
+  .toast{
+    position:fixed;left:50%;bottom:calc(16px + var(--sab));z-index:50;transform:translate(-50%,24px);opacity:0;pointer-events:none;
+    display:flex;align-items:center;gap:12px;padding:7px 7px 7px 18px;border-radius:99px;width:max-content;max-width:calc(100% - 28px);
+    font-size:14.5px;font-weight:600;transition:opacity .25s, transform .25s;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+  .toast span{min-width:0}
+  .toast:not(:has(button)){padding:12px 18px}
 
   /* phones */
-  @media (max-width:520px){
-    .hero{gap:12px;flex-direction:column;align-items:stretch}
-    .hero .wide,.stats{flex:none}
-    .stats,#filStats{grid-template-columns:repeat(2,1fr);min-width:0;width:100%}
-    .stat b{font-size:24px}
-    .ring{width:120px;height:120px}
+  @media (max-width:440px){
+    body{padding-left:calc(12px + var(--sal));padding-right:calc(12px + var(--sar))}
     .card{--pad:14px}
-    .toggle{border-radius:var(--r-md)}
+    .ring{width:112px;height:112px}
+    .pct b{font-size:26px}
+    .tile{padding:8px 10px}
+    .tile b{font-size:21px}
+    .ov-top{gap:12px}
   }
-  /* accessibility */
+  @media (max-width:350px){ .ov-top{flex-direction:column;align-items:stretch} .ring{margin:0 auto} }
+
+  /* accessibility preferences */
   @media (prefers-reduced-transparency: reduce){
-    .glass,.hero,.card,.topbar,.toggle,.stat,.status,.pill,button{-webkit-backdrop-filter:none;backdrop-filter:none}
-    :root{--glass:Canvas;--glass-strong:Canvas}
-    @media (prefers-color-scheme: dark){ :root{--glass:#2a2634;--glass-strong:#34303f} }
+    .mat,.float{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--solid)}
   }
-  @media (prefers-contrast: more){ :root{--muted:#3d3944} .card,.hero,.plate{border-color:var(--ink)} }
-  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+  @media (prefers-contrast: more){
+    :root{--muted:#3b3742;--line:rgba(0,0,0,.35)}
+    @media (prefers-color-scheme: dark){ :root{--muted:#dcd7e4;--line:rgba(255,255,255,.45)} }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before{transition:none !important;animation:none !important}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>🧵 Bead Print Tracker</h1>
-  <div class="sub">Tap a plate when it finishes printing. Printed fewer beads on a plate? Use the − / + on that color first. Tap the last green plate again to undo. Progress saves automatically and, when sharing is on, updates live for everyone with the link. Turn on <b>Track filament</b> to see grams and spools.</div>
 
-  <div class="topbar" id="topbar">
-    <div class="row"><b id="tbPct">0%</b><span id="tbTxt"></span></div>
-    <div class="bar"><i id="tbFill" style="width:0"></i></div>
+  <header class="topbar float" aria-label="Overall progress">
+    <div class="tb-row"><span class="live" id="liveDot" aria-hidden="true"></span><b id="tbPct">0%</b><span id="tbTxt"></span></div>
+    <div class="bar"><i id="tbFill"></i></div>
+  </header>
+
+  <div class="titlebar">
+    <h1>Bead Print Tracker</h1>
+    <button id="shareBtn" class="btn small" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M6 11H5v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9h-1"/></svg>Share</button>
+  </div>
+  <div class="meta">
+  <details class="help">
+    <summary>How it works</summary>
+    <ul>
+      <li>Beads are grouped by color across all characters, so each color prints together.</li>
+      <li>When a plate finishes, press <b>Plate printed</b>, or tap the plate square on its color.</li>
+      <li>Tap a green plate to undo it.</li>
+      <li>Printed some beads before using this? Type the number in <b>Already printed</b> on that color.</li>
+      <li><b>Plate size</b> changes how many beads go on the plates you haven't printed yet.</li>
+      <li>Everyone with the share link sees and edits the same progress.</li>
+    </ul>
+  </details>
+  <span id="syncPill" class="pill float">On this device</span>
   </div>
 
-  <div class="syncbar"><span id="syncPill" class="pill">Local only</span><button id="shareBtn" style="display:none">🔗 Copy share link</button></div>
+  <div class="top">
+    <section class="card mat upnext" id="upnext" aria-label="Up next"></section>
 
-  <label class="toggle"><span>Track filament <small>(optional)</small></span><input type="checkbox" id="filToggle" class="switch" role="switch"></label>
-
-  <div class="hero">
-    <div class="ring">
-      <svg width="150" height="150" viewBox="0 0 150 150">
-        <circle cx="75" cy="75" r="64" fill="none" stroke="#efe7da" stroke-width="16"/>
-        <circle id="ringFg" cx="75" cy="75" r="64" fill="none" stroke="#3aa76d" stroke-width="16" stroke-linecap="round" stroke-dasharray="402.1" stroke-dashoffset="402.1" style="transition:stroke-dashoffset .4s"/>
-      </svg>
-      <div class="pct"><b id="pct">0%</b><span>beads done</span></div>
-    </div>
-    <div class="stats">
-      <div class="stat good"><b id="sDone">0</b><span>plates printed</span></div>
-      <div class="stat warn"><b id="sLeft">0</b><span>plates left</span></div>
-      <div class="stat"><b id="sTotal">0</b><span>plates total</span></div>
-      <div class="stat good"><b id="sBeads">0</b><span>beads printed</span></div>
-      <div class="stat warn"><b id="sBeadsLeft">0</b><span>beads left</span></div>
-      <div class="stat"><b id="sColors">0</b><span>color batches finished</span></div>
-    </div>
-    <div id="filStats"></div>
-    <div class="wide">
-      <small><span>Plates</span><span id="barTxt"></span></small>
-      <div class="bar"><i id="barFill" style="width:0"></i></div>
-    </div>
+    <section class="card mat" aria-label="Overview">
+      <div class="ov-top">
+        <div class="ring">
+          <svg viewBox="0 0 150 150" aria-hidden="true">
+            <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--done2)"/><stop offset="1" style="stop-color:var(--done)"/></linearGradient></defs>
+            <circle class="track" cx="75" cy="75" r="62" fill="none" stroke-width="15"/>
+            <circle class="fg" id="ringFg" cx="75" cy="75" r="62" fill="none" stroke="url(#rg)" stroke-width="15" stroke-linecap="round"/>
+          </svg>
+          <div class="pct"><b id="pct">0%</b><span id="pctSub">0 / 0</span><span>beads</span></div>
+        </div>
+        <div class="tiles">
+          <div class="tile ok"><b id="sDone">0</b><span>plates printed</span></div>
+          <div class="tile"><b id="sLeft">0</b><span>plates left</span></div>
+          <div class="tile"><b id="sBeadsLeft">0</b><span>beads left</span></div>
+          <div class="tile"><b id="sColors">0</b><span>colors done</span></div>
+        </div>
+      </div>
+      <div class="swatches" id="swatches" aria-label="Colors: tap one to jump to it"></div>
+    </section>
   </div>
 
-  <h2>Big beads <small>12 per plate</small></h2>
-  <div class="grid" id="gridBig"></div>
+  <div class="seg float" id="seg" role="tablist" aria-label="View">
+    <button role="tab" id="tabPlates" data-tab="plates" aria-controls="panePlates">Plates</button>
+    <button role="tab" id="tabFil" data-tab="fil" aria-controls="paneFil">Filament</button>
+  </div>
 
-  <h2>Small beads <small>25 per plate</small></h2>
-  <div class="grid" id="gridSmall"></div>
+  <div id="panePlates" role="tabpanel" aria-labelledby="tabPlates">
+    <div class="sortbar">
+      <span class="flabel">Order by beads left · done colors go last</span>
+      <div class="seg mini float" id="sortSeg" role="radiogroup" aria-label="Order of colors">
+        <button role="radio" data-sort="desc">Most left first</button>
+        <button role="radio" data-sort="asc">Fewest left first</button>
+      </div>
+    </div>
+    <h2>Big beads <small>12 per plate</small></h2>
+    <div class="grid" id="gridBig"></div>
+    <h2>Small beads <small>25 per plate</small></h2>
+    <div class="grid" id="gridSmall"></div>
+  </div>
 
-  <div id="filSection">
-    <h2>Filament <small>by color · big and small beads share the same spool</small></h2>
+  <div id="paneFil" role="tabpanel" aria-labelledby="tabFil" hidden>
+    <h2>Filament <small>big and small beads of one color share a spool</small></h2>
+    <section class="card mat" id="filSum"></section>
+    <h2>By color</h2>
     <div class="grid" id="gridFil"></div>
   </div>
 
-  <div class="foot">
-    <button id="reset">Reset all progress</button>
-    <span>Beads are grouped by color across all characters so each color prints together.</span>
-  </div>
+  <footer class="foot">
+    <button id="reset" class="btn small ghost">Reset progress…</button>
+    <span>A big plate holds 12 beads and a small plate holds 25.</span>
+  </footer>
 </div>
+
+<div id="toast" class="toast float" role="status" aria-live="polite"></div>
 
 <script>
 /* ===== EDIT YOUR COUNTS HERE =====  [character, color, size, quantity] */
@@ -242,186 +394,414 @@ const ORDERS = [
 const PER_PLATE = {big:12, small:25};
 const COLORS = {White:"#ffffff",Black:"#262626",Grey:"#9aa0a6","Dark Grey":"#55595e",Pink:"#f7a1c4",
   Orange:"#f58a1f",Peach:"#ffc9a8",Red:"#d93a3a",Green:"#3a9d5d",Brown:"#8a5a3b"};
-const KEY = "beadTracker.v2";
+const KEY = "beadTracker.v2", UIKEY = "beadTracker.ui";
 
-/* group by color + size */
+/* ===== helpers ===== */
+const $ = id => document.getElementById(id);
+const sum = a => a.reduce((x,y)=>x+y,0);
+const safeKey = s => s.replace(/[^A-Za-z0-9]/g,"_");
+const nice = s => s.charAt(0)+s.slice(1).toLowerCase();
+const plural = (n,w) => n+" "+w+(n===1?"":"s");
+
+/* group by color + size; big beads first */
 const groups = [];
 ORDERS.forEach(([ch,color,size,qty])=>{
   let g = groups.find(x=>x.color===color && x.size===size);
-  if(!g){ g={id:color+"|"+size,color,size,cap:PER_PLATE[size],total:0,from:[]}; groups.push(g); }
+  if(!g){
+    g = {id:color+"|"+size, color, size, cap:PER_PLATE[size], total:0, from:[]};
+    g.key = safeKey(g.id);
+    g.label = size==="small" ? "Small "+color.toLowerCase() : nice(color);
+    groups.push(g);
+  }
   g.total += qty; g.from.push([ch,qty]);
 });
+groups.sort((a,b)=>(a.size==="small")-(b.size==="small"));
+const byId = id => groups.find(g=>g.id===id);
 
-/* state: printed[id] = beads on each finished plate (e.g. [9,9,12]); per[id] = beads per plate for this color */
-let st = {printed:{}, per:{}};
-try{ st = JSON.parse(localStorage.getItem(KEY)) || st; }catch(e){}
-st.spools = st.spools||{}; st.filOn = !!st.filOn;
+/* ===== state =====
+   printed[id] = beads on each plate marked printed here, e.g. [12,12,10]
+   pre[id]     = beads printed before using the tracker (typed in)
+   per[id]     = plate size for plates not printed yet
+   spools[color] = {k: 1 kg spools, q: 250 g spools}                       */
+let st = {printed:{}, per:{}, pre:{}, spools:{}};
+try{ Object.assign(st, JSON.parse(localStorage.getItem(KEY))||{}); }catch(e){}
+["printed","per","pre","spools"].forEach(k=>{ if(!st[k] || typeof st[k]!=="object") st[k]={}; });
+delete st.filOn;
+let ui = {tab:"plates", cur:null, sort:"desc"};
+try{ Object.assign(ui, JSON.parse(localStorage.getItem(UIKEY))||{}); }catch(e){}
+const saveUI = ()=>localStorage.setItem(UIKEY, JSON.stringify(ui));
 const save = ()=>{ localStorage.setItem(KEY, JSON.stringify(st)); pushSync(); };
-const sum = a=>a.reduce((x,y)=>x+y,0);
-const perOf = g => Math.min(g.cap, Math.max(1, st.per[g.id]||g.cap));
 
-/* full plate list for a group: finished plates first, then planned ones */
+const perOf = g => Math.min(g.cap, Math.max(1, st.per[g.id]||g.cap));
 function plan(g){
-  const printed = (st.printed[g.id]||[]).slice();
-  let rem = Math.max(0, g.total - sum(printed));
-  const n = perOf(g), planned=[];
+  const printed = (st.printed[g.id]||[]).slice(), ps = sum(printed);
+  const pre = Math.max(0, Math.min(st.pre[g.id]||0, g.total-ps));
+  let rem = Math.max(0, g.total-ps-pre);
+  const n = perOf(g), planned = [];
   while(rem>0){ const c=Math.min(n,rem); planned.push(c); rem-=c; }
-  return {printed, planned, all:printed.concat(planned)};
+  return {printed, planned, all:printed.concat(planned), pre, doneBeads:Math.min(g.total,ps+pre), finished:planned.length===0};
+}
+function allPlans(){ return new Map(groups.map(g=>[g.id, plan(g)])); }
+const beadsLeft = (g,p) => g.total - p.doneBeads;
+/* unfinished colors sorted by beads left (most or fewest first), finished colors last */
+function sorted(list, plans){
+  const dir = ui.sort==="asc" ? 1 : -1;
+  return list.slice().sort((a,b)=>{
+    const pa = plans.get(a.id), pb = plans.get(b.id);
+    if(pa.finished!==pb.finished) return pa.finished ? 1 : -1;
+    return dir*(beadsLeft(a,pa)-beadsLeft(b,pb)) || groups.indexOf(a)-groups.indexOf(b);
+  });
+}
+const bySize = (plans,size) => sorted(groups.filter(g=>g.size===size), plans);
+function nextGroup(plans){
+  const open = bySize(plans,"big").concat(bySize(plans,"small")).filter(g=>!plans.get(g.id).finished);
+  if(!open.length) return null;
+  return open.find(g=>g.id===ui.cur)
+      || open.find(g=>{ const p=plans.get(g.id); return p.printed.length || p.pre; })
+      || open[0];
 }
 
-
-/* ===== filament ===== */
-// Measured: 12 big = 140.63 g, 9 big = 105.81 g  -> straight line through both. 25 small = 102.9 g.
+/* ===== filament =====
+   Measured: 12 big beads = 140.63 g, 9 big = 105.81 g (straight line through both), 25 small = 102.9 g */
 const B_SLOPE = (140.63-105.81)/3, B_INT = 140.63-12*B_SLOPE, G_SMALL = 102.9/25;
-const SPOOLS = {k:1000, q:250};
+const PER_BEAD = {big:140.63/12, small:G_SMALL};
 const plateG = (g,c)=> c<=0 ? 0 : g.size==="small" ? c*G_SMALL : B_INT+B_SLOPE*c;
 const colorList = [...new Set(groups.map(g=>g.color))];
-const fmt = n => Math.round(n).toLocaleString()+" g";
+const grams = n => Math.round(n).toLocaleString()+" g";
 function filData(color){
-  let used=0,todo=0;
+  let used=0, todo=0;
   groups.filter(g=>g.color===color).forEach(g=>{
-    const {printed,planned}=plan(g);
-    used+=sum(printed.map(c=>plateG(g,c))); todo+=sum(planned.map(c=>plateG(g,c)));
+    const p = plan(g);
+    used += sum(p.printed.map(c=>plateG(g,c))) + p.pre*PER_BEAD[g.size];
+    todo += sum(p.planned.map(c=>plateG(g,c)));
   });
-  const sp = st.spools[color]||{k:0,q:0};
-  const owned = SPOOLS.k*sp.k + SPOOLS.q*sp.q;
-  return {color,used,todo,sp,owned,left:owned-used,short:todo-(owned-used)};
+  const s0 = st.spools[color]||{}, sp = {k:s0.k||0, q:s0.q||0};
+  const owned = 1000*sp.k + 250*sp.q;
+  return {color, used, todo, need:used+todo, sp, owned, short:todo-(owned-used)};
 }
-function buyText(short){
-  let k=Math.floor(short/1000), q=Math.ceil((short-1000*k)/250);
-  if(q>=4){k++;q=0}
+function buyText(g){
+  let k=Math.floor(g/1000), q=Math.ceil((g-1000*k)/250);
+  if(q>=4){ k++; q=0; }
   return [k?k+" × 1 kg":"", q?q+" × 250 g":""].filter(Boolean).join(" + ");
 }
-function renderFil(){
-  document.body.classList.toggle("fil", st.filOn);
-  document.getElementById("filToggle").checked = st.filOn;
-  if(!st.filOn) return;
-  const host = document.getElementById("gridFil"); host.innerHTML="";
-  const all = colorList.map(filData);
-  all.forEach(f=>{
-    const scale = Math.max(f.owned, f.used+f.todo, 1);
-    const pu=f.used/scale*100, pt=f.todo/scale*100;
-    const status = f.owned===0
-      ? `<div class="status bad">No spools added yet · need ${fmt(f.used+f.todo)} → ${buyText(f.used+f.todo)}</div>`
-      : f.short>0
-        ? `<div class="status bad">⚠ Short ${fmt(f.short)} → buy ${buyText(f.short)}</div>`
-        : `<div class="status ok">✓ Enough · ${fmt(-f.short)} spare after finishing</div>`;
-    const card=document.createElement("div"); card.className="card";
-    card.innerHTML=`<div class="head"><div class="dot" style="background:${COLORS[f.color]}"></div>
-      <div><h3>${f.color}</h3><p>needs ${fmt(f.used+f.todo)} in total</p></div>
-      <div class="mini"><b>${fmt(Math.max(0,f.left))}</b>on spool(s)</div></div>
-      <div class="fbar"><i class="u" style="width:${pu}%"></i><i class="t" style="width:${pt}%;background-color:${COLORS[f.color]}"></i>${f.owned?`<span class="own" style="left:calc(${f.owned/scale*100}% - 1px)" title="Filament you own"></span>`:""}</div>
-      <div class="legend"><span>■ used <b>${fmt(f.used)}</b></span><span>▨ still to print <b>${fmt(f.todo)}</b></span><span>▏owned <b>${fmt(f.owned)}</b></span></div>
-      <div class="spools">
-        <div>1 kg spools <button data-spool="k" data-d="-1" data-c="${f.color}">−</button><b>${f.sp.k}</b><button data-spool="k" data-d="1" data-c="${f.color}">+</button></div>
-        <div>250 g spools <button data-spool="q" data-d="-1" data-c="${f.color}">−</button><b>${f.sp.q}</b><button data-spool="q" data-d="1" data-c="${f.color}">+</button></div>
-      </div>${status}`;
-    host.appendChild(card);
+
+/* ===== rendering ===== */
+const CIRC = 2*Math.PI*62;
+let popKey = null, followKey = null;
+const reduceMotion = ()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* slide cards and color dots to their new place instead of jumping (FLIP) */
+const flipEls = ()=>document.querySelectorAll("#gridBig > .card, #gridSmall > .card, #swatches > .sw");
+function snapshot(){ const m = new Map(); flipEls().forEach(el=>m.set(el.id, el.getBoundingClientRect())); return m; }
+function playFlip(before){
+  if(!before.size || reduceMotion() || !Element.prototype.animate) return;
+  flipEls().forEach(el=>{
+    const b = before.get(el.id); if(!b || !b.width) return;
+    const a = el.getBoundingClientRect(); if(!a.width) return;
+    const dx = b.left-a.left, dy = b.top-a.top;
+    if(Math.abs(dx)<1 && Math.abs(dy)<1) return;
+    el.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"translate(0,0)"}], {duration:450, easing:"cubic-bezier(.2,.75,.2,1)"});
   });
-  const used=sum(all.map(f=>f.used)), todo=sum(all.map(f=>f.todo)), shortAll=sum(all.map(f=>Math.max(0,f.short)));
-  document.getElementById("filStats").innerHTML=
-    `<div class="stat good"><b>${fmt(used)}</b><span>filament used</span></div>
-     <div class="stat warn"><b>${fmt(todo)}</b><span>filament still to print</span></div>
-     <div class="stat"><b>${fmt(used+todo)}</b><span>filament total</span></div>
-     <div class="stat ${shortAll?"warn":"good"}"><b>${shortAll?fmt(shortAll):"✓ 0 g"}</b><span>short (need to buy)</span></div>`;
 }
 
 function render(){
-  let plates=0, pd=0, beads=0, bd=0, finished=0;
-  const nextG = groups.find(g=>plan(g).planned.length>0);
-  ["big","small"].forEach(size=>{
-    const host = document.getElementById(size==="big"?"gridBig":"gridSmall");
-    host.innerHTML = "";
-    groups.filter(g=>g.size===size).forEach(g=>{
-      const {printed,planned,all} = plan(g);
-      const d = printed.length, n = perOf(g);
-      plates+=all.length; pd+=d; beads+=g.total; bd+=Math.min(g.total,sum(printed));
-      const isDone = planned.length===0;
-      if(isDone) finished++;
-      const card = document.createElement("div");
-      card.className = "card"+(g===nextG?" next":"")+(isDone?" complete":"");
-      const badge = g===nextG ? '<span class="badge">PRINT NEXT</span>' : isDone ? '<span class="badge ok">✓ DONE</span>' : '';
-      const plateHtml = all.map((c,i)=>
-        `<div class="plate${i<d?" done":""}${c<g.cap?" partial":""}" data-g="${g.id}" data-i="${i}" title="Plate ${i+1}: ${c} beads"><span>#${i+1}</span><b>${c}</b></div>`).join("");
-      const chips = g.from.map(([c,q])=>`<span class="chip">${c} <b>${q}</b></span>`).join("");
-      card.innerHTML = `${badge}
-        <div class="head">
-          <div class="dot" style="background:${COLORS[g.color]}"></div>
-          <div><h3>${g.color}</h3><p>${sum(printed)} / ${g.total} beads · ${all.length} plate${all.length>1?"s":""}</p></div>
-          <div class="mini"><b>${d}/${all.length}</b>plates</div>
-        </div>
-        <div class="bar"><i style="width:${Math.min(100,sum(printed)/g.total*100)}%"></i></div>
-        <div class="plates">${plateHtml}</div>
-        <div class="per">Beads per plate
-          <button data-step="-1" data-g="${g.id}">−</button><b>${n}</b><button data-step="1" data-g="${g.id}">+</button>
-          <span>(sets the size of plates you tap next)</span></div>
-        <div class="addp"><strong>Already printed? Type it in</strong>
-          <input class="ip" type="number" inputmode="numeric" min="1" placeholder="plates" aria-label="Number of plates">
-          <span>plates ×</span>
-          <input class="ib" type="number" inputmode="numeric" min="1" max="${g.cap}" value="${n}" aria-label="Beads on each plate">
-          <span>beads</span>
-          <button data-add="${g.id}">Add</button>
-          ${d?`<button class="ghost" data-clear="${g.id}">Clear</button>`:""}
-        </div>
-        <div class="chips">${chips}</div>`;
-      host.appendChild(card);
-    });
-  });
-  const p = bd/beads;
-  const pp = pd/plates;
-  document.getElementById("pct").textContent = Math.round(p*100)+"%";
-  document.getElementById("ringFg").style.strokeDashoffset = 402.1*(1-p);
-  sDone.textContent=pd; sLeft.textContent=plates-pd; sTotal.textContent=plates;
-  sBeads.textContent=bd; sBeadsLeft.textContent=beads-bd;
-  sColors.textContent=finished+" / "+groups.length;
-  barFill.style.width=(pp*100)+"%"; barTxt.textContent=pd+" of "+plates;
-  tbPct.textContent=Math.round(p*100)+"%"; tbFill.style.width=(p*100)+"%";
-  tbTxt.textContent=pd+" of "+plates+" plates · "+(plates-pd)+" left · "+bd+"/"+beads+" beads";
+  queued = false; clearTimeout(renderTimer);
+  // keep anything typed in a field that is about to be redrawn
+  const a = document.activeElement;
+  if(a && a.matches && a.matches("input.pre")){ const r=applyPre(a); if(r.changed) save(); }
+
+  const plans = allPlans();
+  const next = nextGroup(plans);
+  const big = bySize(plans,"big"), small = bySize(plans,"small");
+  const open = big.concat(small).filter(g=>!plans.get(g.id).finished);
+  const before = snapshot();
+  let beads=0, doneB=0, pDone=0, pLeft=0, fin=0;
+  groups.forEach(g=>{ const p=plans.get(g.id); beads+=g.total; doneB+=p.doneBeads; pDone+=p.printed.length; pLeft+=p.planned.length; if(p.finished) fin++; });
+  const frac = beads ? doneB/beads : 0;
+  const pct = doneB===beads ? 100 : Math.floor(frac*100);
+
+  $("tbPct").textContent = pct+"%";
+  $("tbFill").style.width = frac*100+"%";
+  $("tbTxt").textContent = pLeft ? `${plural(pLeft,"plate")} left · ${doneB}/${beads} beads` : `All ${beads} beads printed`;
+
+  $("pct").textContent = pct+"%";
+  $("pctSub").textContent = `${doneB} / ${beads}`;
+  const fg = $("ringFg");
+  fg.style.strokeDasharray = CIRC; fg.style.strokeDashoffset = CIRC*(1-frac); fg.style.opacity = frac>0 ? 1 : 0;
+  $("sDone").textContent = pDone;
+  $("sLeft").textContent = pLeft;
+  $("sBeadsLeft").textContent = beads-doneB;
+  $("sColors").textContent = `${fin} / ${groups.length}`;
+
+  const swOrder = big.concat(small).sort((a,b)=>plans.get(a.id).finished - plans.get(b.id).finished);
+  $("swatches").innerHTML = swOrder.map(g=>{
+    const p = plans.get(g.id);
+    return `<button class="sw${p.finished?" fin":""}" id="sw-${g.key}" data-jump="${g.key}" aria-label="${g.label}: ${p.finished?"done":plural(p.planned.length,"plate")+" left"}">
+      <span class="sw-ring" style="--p:${p.doneBeads/g.total*100}"><span class="sw-dot" style="background:${COLORS[g.color]}"></span></span>
+      <span class="sw-name">${g.label}</span><span class="sw-n">${p.finished?"Done":p.planned.length+" left"}</span></button>`;
+  }).join("");
+
+  renderUpNext(next, plans, open);
+  $("gridBig").innerHTML = big.map(g=>cardHTML(g, plans.get(g.id), g===next)).join("");
+  $("gridSmall").innerHTML = small.map(g=>cardHTML(g, plans.get(g.id), g===next)).join("");
+  popKey = null;
+  renderTabs();
   renderFil();
+
+  // if the card you just changed moved out of view, follow it
+  let follow = null;
+  if(followKey){
+    const el = $("c-"+followKey), b = before.get("c-"+followKey);
+    followKey = null;
+    if(el && b){
+      const a = el.getBoundingClientRect();
+      if(Math.abs(a.top-b.top)>2 && (a.top<90 || a.bottom>innerHeight)) follow = el;
+    }
+  }
+  playFlip(before);
+  if(follow) follow.scrollIntoView({behavior: reduceMotion() ? "auto" : "smooth", block:"center"});
 }
 
-document.getElementById("filToggle").onchange=e=>{ st.filOn=e.target.checked; save(); render(); };
-document.addEventListener("click",e=>{
-  const sb = e.target.closest("[data-spool]");
-  if(sb){
-    const c=sb.dataset.c, sp=st.spools[c]=st.spools[c]||{k:0,q:0};
-    sp[sb.dataset.spool]=Math.max(0,sp[sb.dataset.spool]+ +sb.dataset.d);
-    save(); render(); return;
-  }
-  const addB = e.target.closest("[data-add]");
-  if(addB){
-    const g = groups.find(x=>x.id===addB.dataset.add), card=addB.closest(".card");
-    const np = Math.floor(+card.querySelector(".ip").value), nb = Math.min(g.cap, Math.floor(+card.querySelector(".ib").value));
-    if(!(np>=1 && nb>=1)){ card.querySelector(".ip").focus(); return; }
-    const arr = (st.printed[g.id]||[]).slice(); let rem = g.total - sum(arr);
-    for(let i=0;i<np && rem>0;i++){ const c=Math.min(nb,rem); arr.push(c); rem-=c; }
-    st.printed[g.id]=arr; save(); render(); return;
-  }
-  const clrB = e.target.closest("[data-clear]");
-  if(clrB){
-    if(confirm("Clear all printed plates for this color?")){ st.printed[clrB.dataset.clear]=[]; save(); render(); }
+function renderUpNext(g, plans, open){
+  const el = $("upnext");
+  el.classList.toggle("alldone", !g);
+  if(!g){
+    el.innerHTML = `<div class="eyebrow">All done</div><div class="un-done">🎉 Every plate is printed!</div>`;
     return;
   }
-  const stp = e.target.closest("[data-step]");
+  const p = plans.get(g.id), c = p.planned[0], idx = p.printed.length;
+  const opts = open
+    .map(x=>`<option value="${x.id}"${x===g?" selected":""}>${x.label}</option>`).join("");
+  const dots = Array.from({length:g.cap},(_,i)=>`<i class="${i<c?"on":""}"></i>`).join("");
+  el.innerHTML = `
+    <div class="eyebrow">Up next</div>
+    <div class="un-main">
+      <div class="dot lg" style="background:${COLORS[g.color]}"></div>
+      <div class="un-text">
+        <span class="pick"><span class="pick-label">${g.label}</span><span class="chev" aria-hidden="true">▼</span><select id="curSel" aria-label="Color to print next">${opts}</select></span>
+        <p>Plate ${idx+1} of ${p.all.length} · <b>${plural(c,"bead")}</b> · about ${grams(plateG(g,c))}</p>
+      </div>
+    </div>
+    <div class="beads ${g.size}" style="--c:${COLORS[g.color]}" aria-hidden="true">${dots}</div>
+    <button class="btn primary" data-mark="${g.id}">✓ Plate printed</button>`;
+}
+
+function cardHTML(g, p, isNext){
+  const d = p.printed.length, left = p.planned.length, n = perOf(g);
+  const badge = isNext ? `<span class="badge">Up next</span>` : p.finished ? `<span class="badge ok">✓ Done</span>` : "";
+  const tiles = p.all.map((c,i)=>{
+    const done = i<d, pop = popKey===g.id+"#"+i;
+    return `<button class="plate${done?" done":""}${c<g.cap?" partial":""}${pop?" pop":""}" data-g="${g.id}" data-i="${i}" aria-pressed="${done}" aria-label="${g.label} plate ${i+1}, ${plural(c,"bead")}${done?", printed":""}"><span>#${i+1}</span><b>${c}</b></button>`;
+  }).join("");
+  const maxPre = g.total - sum(p.printed);
+  return `<article class="card mat${isNext?" next":""}${p.finished?" complete":""}" id="c-${g.key}">
+    ${badge}
+    <div class="head">
+      <div class="dot" style="background:${COLORS[g.color]}"></div>
+      <div class="ht"><h3>${g.label}</h3><p>${p.doneBeads} of ${g.total} beads printed</p></div>
+      <div class="mini">${p.finished ? `<b class="ok">✓</b>done` : `<b>${left}</b>${left===1?"plate":"plates"} left`}</div>
+    </div>
+    <div class="bar"><i style="width:${p.doneBeads/g.total*100}%"></i></div>
+    ${tiles ? `<div class="plates">${tiles}</div>` : `<p class="note">All ${g.total} beads were printed before tracking.</p>`}
+    <div class="adjust">
+      <label class="field"><span class="flabel">Already printed</span>
+        <span class="inwrap"><input class="pre" type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="${maxPre}" placeholder="0" value="${p.pre||""}" data-g="${g.id}" enterkeyhint="done" aria-label="${g.label}: beads already printed"><span>beads</span></span>
+      </label>
+      <div class="field"><span class="flabel">Plate size</span>
+        <span class="stepper">
+          <button class="btn round" data-step="-1" data-g="${g.id}" aria-label="${g.label}: fewer beads per plate"${n<=1?" disabled":""}>−</button>
+          <b aria-live="polite">${n}</b>
+          <button class="btn round" data-step="1" data-g="${g.id}" aria-label="${g.label}: more beads per plate"${n>=g.cap?" disabled":""}>+</button>
+        </span>
+      </div>
+    </div>
+    <div class="chips">${g.from.map(([c,q])=>`<span class="chip">${c} <b>${q}</b></span>`).join("")}</div>
+  </article>`;
+}
+
+function renderTabs(){
+  const fil = ui.tab==="fil";
+  $("seg").dataset.pos = fil ? "1" : "0";
+  $("sortSeg").dataset.pos = ui.sort==="asc" ? "1" : "0";
+  $("sortSeg").querySelectorAll("[data-sort]").forEach(b=>b.setAttribute("aria-checked", String(b.dataset.sort===ui.sort)));
+  $("tabPlates").setAttribute("aria-selected", String(!fil));
+  $("tabFil").setAttribute("aria-selected", String(fil));
+  $("panePlates").hidden = fil;
+  $("paneFil").hidden = !fil;
+}
+
+function renderFil(){
+  const all = colorList.map(filData);
+  const used = sum(all.map(f=>f.used)), todo = sum(all.map(f=>f.todo));
+  const added = all.filter(f=>f.owned>0), missing = all.filter(f=>f.owned===0);
+  const short = added.filter(f=>f.short>0.5);
+  const onSpools = sum(added.map(f=>Math.max(0, f.owned-f.used)));
+  const chip = (f,text,cls)=>`<span class="fchip ${cls}"><i style="background:${COLORS[f.color]}"></i>${nice(f.color)} <b>${text}</b></span>`;
+  let shop = "";
+  if(!added.length) shop = `<div class="shop none">Add the spools you have for each color below, and this will show what to buy.</div>`;
+  else{
+    shop += short.length
+      ? `<div class="shop bad"><div class="shop-h">🛒 To buy</div><div class="fchips">${short.map(f=>chip(f,buyText(f.short),"bad")).join("")}</div></div>`
+      : `<div class="shop ok">✓ Enough filament for ${missing.length ? "the colors you added" : "every color"}.</div>`;
+    if(missing.length) shop += `<div class="shop none"><div class="shop-h">No spools added yet <span style="font-weight:400">· filament needed</span></div><div class="fchips">${missing.map(f=>chip(f,grams(f.need),"")).join("")}</div></div>`;
+  }
+  $("filSum").innerHTML = `
+    <div class="fil-tiles">
+      <div class="tile ok"><b>${grams(used)}</b><span>used so far</span></div>
+      <div class="tile"><b>${grams(todo)}</b><span>still to print</span></div>
+      <div class="tile"><b>${grams(used+todo)}</b><span>total needed</span></div>
+      <div class="tile"><b>${added.length ? grams(onSpools) : "–"}</b><span>left on your spools</span></div>
+    </div>
+    ${shop}
+    <p class="hint">Plate weights: 12 big beads 140.63 g · 9 big beads 105.81 g · 25 small beads 102.9 g.</p>`;
+
+  $("gridFil").innerHTML = all.map(f=>{
+    const scale = Math.max(f.owned, f.need, 1);
+    const status = f.owned===0
+      ? `<div class="status none">Needs ${grams(f.need)} in total, for example ${buyText(f.need)}.</div>`
+      : f.short>0.5
+        ? `<div class="status bad">Short ${grams(f.short)}: buy ${buyText(f.short)}</div>`
+        : `<div class="status ok">✓ Enough, with ${grams(-f.short)} spare at the end</div>`;
+    const stepper = (k,label)=>`<div class="field"><span class="flabel">${label}</span><span class="stepper">
+        <button class="btn round" data-spool="${k}" data-d="-1" data-c="${f.color}" aria-label="${f.color}: one fewer ${label}"${f.sp[k]<=0?" disabled":""}>−</button>
+        <b aria-live="polite">${f.sp[k]}</b>
+        <button class="btn round" data-spool="${k}" data-d="1" data-c="${f.color}" aria-label="${f.color}: one more ${label}">+</button></span></div>`;
+    return `<article class="card mat">
+      <div class="head"><div class="dot" style="background:${COLORS[f.color]}"></div>
+        <div class="ht"><h3>${nice(f.color)}</h3><p>needs ${grams(f.need)} in total</p></div>
+        <div class="mini"><b>${f.owned ? grams(Math.max(0,f.owned-f.used)) : "–"}</b>left on spools</div></div>
+      <div class="fbar" style="--c:${COLORS[f.color]}"><i class="u" style="width:${f.used/scale*100}%"></i><i class="t" style="width:${f.todo/scale*100}%"></i>${f.owned?`<span class="own" style="left:${f.owned/scale*100}%" title="Spools you have"></span>`:""}</div>
+      <div class="legend"><span>■ used <b>${grams(f.used)}</b></span><span>▨ still to print <b>${grams(f.todo)}</b></span><span>┃ spools <b>${grams(f.owned)}</b></span></div>
+      <div class="spools">${stepper("k","1 kg spools")}${stepper("q","250 g spools")}</div>
+      ${status}
+    </article>`;
+  }).join("");
+}
+
+/* ===== deferred rendering: never redraw under a finger or an open keyboard =====
+   On touch screens a field commits *after* the finger lifts, while the tap is still being
+   delivered, so redraws wait a moment and retry until nobody is touching or typing. */
+let pointerDown = false, queued = false, renderTimer = 0;
+const typing = ()=>{ const a=document.activeElement; return !!(a && a.matches && a.matches("input.pre")); };
+function requestRender(delay=0){ queued = true; clearTimeout(renderTimer); renderTimer = setTimeout(flush, delay); }
+function flush(){
+  if(!queued) return;
+  if(pointerDown || typing()){ clearTimeout(renderTimer); renderTimer = setTimeout(flush, 350); return; }
+  render();
+}
+addEventListener("pointerdown", ()=>{ pointerDown = true; }, true);
+addEventListener("pointerup", ()=>{ pointerDown = false; }, true);
+addEventListener("pointercancel", ()=>{ pointerDown = false; }, true);
+
+/* ===== toast ===== */
+let toastTimer;
+function toast(msg, undo){
+  const t = $("toast");
+  t.innerHTML = `<span></span>${undo?`<button class="btn small" id="undoBtn">Undo</button>`:""}`;
+  t.firstChild.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), undo ? 6000 : 3500);
+  if(undo) $("undoBtn").onclick = ()=>{ undo(); t.classList.remove("show"); };
+}
+
+/* ===== actions ===== */
+function applyPre(inp){
+  const g = byId(inp.dataset.g); if(!g) return {changed:false};
+  const max = g.total - sum(st.printed[g.id]||[]);
+  const raw = Math.floor(Number(inp.value)||0);
+  const v = Math.max(0, Math.min(raw, max));
+  const changed = v !== (st.pre[g.id]||0);
+  if(changed){ if(v) st.pre[g.id] = v; else delete st.pre[g.id]; }
+  return {changed, clamped: raw>max, g, max};
+}
+function commitPre(inp){
+  const r = applyPre(inp);
+  if(r.changed){ save(); followKey = r.g.key; }
+  if(r.clamped) toast(`${r.g.label} has ${r.g.total} beads in total, so this was set to ${r.max}.`);
+  requestRender(300);   // let a tap that caused this commit finish first
+}
+function markNext(id){
+  const g = byId(id), p = plan(g);
+  if(!p.planned.length) return;
+  const arr = p.printed.concat([p.planned[0]]), n = arr.length;
+  st.printed[g.id] = arr; ui.cur = g.id; saveUI();
+  popKey = g.id+"#"+(n-1);
+  save(); render();
+  const after = nextGroup(allPlans());
+  const msg = plan(g).finished ? `🎉 ${g.label} is done!${after?" Next: "+after.label:""}` : `✓ ${g.label} plate ${n} printed`;
+  toast(msg, ()=>{
+    const cur = st.printed[g.id]||[];
+    if(cur.length===n){ st.printed[g.id] = cur.slice(0,n-1); ui.cur = g.id; saveUI(); save(); render(); }
+  });
+}
+
+document.addEventListener("click", e=>{
+  const t = e.target;
+  const mk = t.closest("[data-mark]");
+  if(mk){ markNext(mk.dataset.mark); return; }
+
+  const jp = t.closest("[data-jump]");
+  if(jp){
+    ui.tab = "plates"; saveUI(); renderTabs();
+    const card = $("c-"+jp.dataset.jump);
+    if(card){
+      card.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"start"});
+      card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
+    }
+    return;
+  }
+
+  const so = t.closest("[data-sort]");
+  if(so){ if(ui.sort!==so.dataset.sort){ ui.sort = so.dataset.sort; saveUI(); render(); } return; }
+
+  const tb = t.closest("[data-tab]");
+  if(tb){ ui.tab = tb.dataset.tab; saveUI(); renderTabs(); return; }
+
+  const stp = t.closest("[data-step]");
   if(stp){
-    const g = groups.find(x=>x.id===stp.dataset.g);
-    st.per[g.id] = Math.min(g.cap, Math.max(1, perOf(g)+ +stp.dataset.step));
+    const g = byId(stp.dataset.g);
+    const v = Math.min(g.cap, Math.max(1, perOf(g) + Number(stp.dataset.step)));
+    if(v===g.cap) delete st.per[g.id]; else st.per[g.id] = v;
     save(); render(); return;
   }
-  const el = e.target.closest(".plate"); if(!el) return;
-  const g = groups.find(x=>x.id===el.dataset.g), i = +el.dataset.i;
-  const {printed,all} = plan(g), d = printed.length;
-  if(i+1===d) st.printed[g.id] = printed.slice(0,i);              // tap last green plate = undo
-  else if(i<d) st.printed[g.id] = printed.slice(0,i+1);            // tap earlier green plate = undo later ones
-  else st.printed[g.id] = all.slice(0,i+1);                        // mark up to this plate as printed
-  save(); render();
+
+  const sp = t.closest("[data-spool]");
+  if(sp){
+    const c = sp.dataset.c, s0 = st.spools[c]||{}, s = st.spools[c] = {k:s0.k||0, q:s0.q||0};
+    s[sp.dataset.spool] = Math.max(0, s[sp.dataset.spool] + Number(sp.dataset.d));
+    save(); render(); return;
+  }
+
+  const pl = t.closest(".plate");
+  if(pl){
+    const g = byId(pl.dataset.g), i = Number(pl.dataset.i);
+    const p = plan(g), d = p.printed.length;
+    if(i+1===d) st.printed[g.id] = p.printed.slice(0,i);          // tap the last green plate: undo it
+    else if(i<d) st.printed[g.id] = p.printed.slice(0,i+1);       // tap an earlier green plate: undo the ones after it
+    else { st.printed[g.id] = p.all.slice(0,i+1); popKey = g.id+"#"+i; }  // mark up to this plate as printed
+    if(!plan(g).finished){ ui.cur = g.id; saveUI(); }
+    followKey = g.key;
+    save(); render(); return;
+  }
 });
-document.getElementById("reset").onclick=()=>{
-  if(confirm("Reset all printing progress?")){ st.printed={}; st.per={}; save(); render(); }
+
+document.addEventListener("change", e=>{
+  const t = e.target;
+  if(t.matches("input.pre")) commitPre(t);
+  else if(t.id==="curSel"){ ui.cur = t.value; saveUI(); render(); }
+});
+document.addEventListener("keydown", e=>{
+  if(e.key==="Enter" && e.target.matches("input.pre")){ e.preventDefault(); e.target.blur(); }
+});
+$("reset").onclick = ()=>{
+  if(confirm("Reset all printing progress for everyone using this tracker? Spool counts stay.")){
+    st.printed = {}; st.per = {}; st.pre = {}; ui.cur = null; saveUI(); save(); render();
+  }
 };
 
 /* ===== shared live sync (Firebase Realtime Database) =====
-   Paste your Firebase web config here to turn sharing on. Leave null for local-only mode. */
+   Set FIREBASE_CONFIG to null for a local-only tracker. */
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBAOQ1QT_VBCOw2D657EvbiP3oVU4x4fwQ",
   authDomain: "bead-tracker-6a892.firebaseapp.com",
@@ -432,63 +812,87 @@ const FIREBASE_CONFIG = {
   appId: "1:24528293054:web:2110935c954cac2e3ca2ef"
 };
 
-const safeKey = s=>s.replace(/[^A-Za-z0-9]/g,"_");
-let sync=null, flatPrev={};
-const pill=(t,c)=>{ const el=document.getElementById("syncPill"); el.textContent=t; el.className="pill "+(c||""); };
+let sync = null, flatPrev = {};
+function setLive(state){
+  const pill = $("syncPill"), dot = $("liveDot");
+  const map = {
+    local:["On this device",""], connecting:["Connecting…",""],
+    on:["● Live",  "on"], off:["Offline · will sync","off"], err:["Sync error","off"]
+  }[state];
+  pill.textContent = map[0]; pill.className = "pill float "+map[1];
+  dot.className = "live "+map[1];
+  dot.title = map[0];
+}
 function flat(){
-  const o={};
+  const o = {};
   groups.forEach(g=>{
-    const pr=st.printed[g.id]; if(pr&&pr.length) o["printed/"+safeKey(g.id)]=pr;
-    if(st.per[g.id]) o["per/"+safeKey(g.id)]=st.per[g.id];
+    const pr = st.printed[g.id]; if(pr && pr.length) o["printed/"+g.key] = pr;
+    if(st.per[g.id]) o["per/"+g.key] = st.per[g.id];
+    if(st.pre[g.id]) o["pre/"+g.key] = st.pre[g.id];
   });
-  Object.entries(st.spools).forEach(([c,sp])=>{ if(sp.k||sp.q) o["spools/"+safeKey(c)]={k:sp.k,q:sp.q}; });
+  Object.entries(st.spools).forEach(([c,s])=>{ if(s && (s.k||s.q)) o["spools/"+safeKey(c)] = {k:s.k||0, q:s.q||0}; });
   return o;
 }
 function pushSync(){
   if(!sync) return;
-  const cur=flat(), up={};
-  for(const k in cur) if(JSON.stringify(cur[k])!==JSON.stringify(flatPrev[k])) up[k]=cur[k];
-  for(const k in flatPrev) if(!(k in cur)) up[k]=null;
-  flatPrev=cur;
-  if(Object.keys(up).length) sync.update(sync.ref,up).catch(()=>pill("Sync error","err"));
+  const cur = flat(), up = {};
+  for(const k in cur) if(JSON.stringify(cur[k])!==JSON.stringify(flatPrev[k])) up[k] = cur[k];
+  for(const k in flatPrev) if(!(k in cur)) up[k] = null;
+  flatPrev = cur;
+  if(Object.keys(up).length) sync.update(sync.ref, up).catch(()=>setLive("err"));
 }
 function applyRemote(v){
-  const arr=x=>Array.isArray(x)?x:Object.values(x||{});
-  st.printed={}; st.per={}; st.spools={};
+  const arr = x => (Array.isArray(x) ? x : Object.values(x||{})).map(Number).filter(n=>n>0);
+  st.printed = {}; st.per = {}; st.pre = {}; st.spools = {};
   groups.forEach(g=>{
-    const k=safeKey(g.id);
-    if(v.printed&&v.printed[k]) st.printed[g.id]=arr(v.printed[k]);
-    if(v.per&&v.per[k]) st.per[g.id]=v.per[k];
+    const k = g.key;
+    if(v.printed && v.printed[k]) st.printed[g.id] = arr(v.printed[k]);
+    if(v.per && v.per[k]) st.per[g.id] = Number(v.per[k]);
+    if(v.pre && v.pre[k]) st.pre[g.id] = Number(v.pre[k]);
   });
-  colorList.forEach(c=>{ const sp=v.spools&&v.spools[safeKey(c)]; if(sp) st.spools[c]={k:sp.k||0,q:sp.q||0}; });
+  colorList.forEach(c=>{ const s = v.spools && v.spools[safeKey(c)]; if(s) st.spools[c] = {k:Number(s.k)||0, q:Number(s.q)||0}; });
   localStorage.setItem(KEY, JSON.stringify(st));
-  flatPrev=flat();
+  flatPrev = flat();
+}
+async function shareLink(){
+  const url = location.href;
+  if(navigator.share){
+    try{ await navigator.share({title:"Bead Print Tracker", url}); return; }
+    catch(e){ if(e && e.name==="AbortError") return; }
+  }
+  try{ await navigator.clipboard.writeText(url); toast("Link copied. Send it to anyone who should see this tracker."); }
+  catch(e){ prompt("Copy this link:", url); }
 }
 (async function startSync(){
-  if(!FIREBASE_CONFIG) return;
-  let room=(location.hash.match(/room=([\w-]+)/)||[])[1] || localStorage.getItem(KEY+".room");
-  if(!room) room=Array.from(crypto.getRandomValues(new Uint8Array(9)),b=>b.toString(36).padStart(2,"0")).join("").slice(0,14);
-  localStorage.setItem(KEY+".room",room);
-  history.replaceState(null,"","#room="+room);
+  if(!FIREBASE_CONFIG){ setLive("local"); return; }
+  let room = (location.hash.match(/room=([\w-]+)/)||[])[1] || localStorage.getItem(KEY+".room");
+  if(!room) room = Array.from(crypto.getRandomValues(new Uint8Array(9)), b=>b.toString(36).padStart(2,"0")).join("").slice(0,14);
+  localStorage.setItem(KEY+".room", room);
+  history.replaceState(null, "", "#room="+room);
+  setLive("connecting");
   try{
-    const V="10.14.1";
+    const V = "10.14.1";
     const [{initializeApp},{getDatabase,ref,onValue,update}] = await Promise.all([
       import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`),
       import(`https://www.gstatic.com/firebasejs/${V}/firebase-database.js`)]);
-    const db=getDatabase(initializeApp(FIREBASE_CONFIG));
-    sync={update, ref:ref(db,"rooms/"+room)};
-    pill("Connecting…");
-    let first=true;
+    const db = getDatabase(initializeApp(FIREBASE_CONFIG));
+    sync = {update, ref:ref(db,"rooms/"+room)};
+    let first = true, everConnected = false;
+    onValue(ref(db,".info/connected"), s=>{
+      if(s.val()){ everConnected = true; setLive("on"); }
+      else if(everConnected) setLive("off");
+    });
     onValue(sync.ref, snap=>{
-      const v=snap.val();
-      if(first && !v){ flatPrev={}; pushSync(); }          // empty room: seed it with what this device has
-      else if(v){ applyRemote(v); }
-      first=false; pill("● Live · shared","live"); render();
-    }, ()=>pill("Sync error","err"));
-    const b=document.getElementById("shareBtn"); b.style.display="";
-    b.onclick=()=>navigator.clipboard.writeText(location.href).then(()=>{b.textContent="✓ Copied!";setTimeout(()=>b.textContent="🔗 Copy share link",1500)});
-  }catch(e){ pill("Sync error","err"); }
+      const v = snap.val();
+      if(first && !v){ flatPrev = {}; pushSync(); }   // empty room: fill it with what this device has
+      else if(v) applyRemote(v);
+      first = false;
+      requestRender();
+    }, ()=>setLive("err"));
+    const b = $("shareBtn"); b.hidden = false; b.onclick = shareLink;
+  }catch(e){ setLive("err"); }
 })();
+
 render();
 </script>
 </body>
