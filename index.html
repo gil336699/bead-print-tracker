@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bead Print Tracker</title>
+<style>
+  :root{
+    --bg:#f6f1ea; --card:#fffdf9; --ink:#2b2622; --muted:#8a8178; --line:#e6ddd0;
+    --accent:#e0607e; --done:#3aa76d; --todo:#efe7da;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:24px}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:26px}
+  .sub{color:var(--muted);margin-bottom:20px}
+
+  .hero{display:flex;gap:28px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 26px;margin-bottom:28px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+  .ring{position:relative;width:150px;height:150px;flex:none}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring .pct b{font-size:34px;line-height:1}
+  .ring .pct span{font-size:12px;color:var(--muted)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;flex:1;min-width:280px}
+  .stat{background:var(--bg);border-radius:14px;padding:12px 16px}
+  .stat b{display:block;font-size:30px;line-height:1.1}
+  .stat span{font-size:13px;color:var(--muted)}
+  .stat.good b{color:var(--done)} .stat.warn b{color:var(--accent)}
+  .bar{height:12px;background:var(--todo);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--done);border-radius:99px;transition:width .3s}
+  .hero .wide{flex-basis:100%}
+  .hero .wide small{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:5px}
+
+  h2{font-size:18px;margin:26px 0 12px;display:flex;align-items:baseline;gap:10px}
+  h2 small{font-weight:400;color:var(--muted);font-size:13px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+
+  .card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;position:relative;transition:border-color .2s}
+  .card.next{border-color:var(--accent);box-shadow:0 0 0 4px rgba(224,96,126,.12)}
+  .card.complete{opacity:.65}
+  .badge{position:absolute;top:-11px;right:14px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px}
+  .badge.ok{background:var(--done)}
+  .head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .dot{width:42px;height:42px;border-radius:50%;border:2px solid rgba(0,0,0,.15);flex:none;box-shadow:inset 0 -6px 10px rgba(0,0,0,.12), inset 0 4px 8px rgba(255,255,255,.35)}
+  .head h3{margin:0;font-size:18px}
+  .head p{margin:0;color:var(--muted);font-size:13px}
+  .mini{margin-left:auto;text-align:right;font-size:13px;color:var(--muted)}
+  .mini b{display:block;font-size:20px;color:var(--ink)}
+
+  .plates{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .plate{width:56px;height:56px;border-radius:12px;border:2px solid var(--line);background:var(--todo);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--muted);user-select:none;transition:transform .08s,background .2s}
+  .plate:hover{transform:translateY(-2px)}
+  .plate b{font-size:16px;color:var(--ink)}
+  .plate.done{background:var(--done);border-color:var(--done);color:#e6ffef}
+  .plate.done b{color:#fff}
+  .plate.partial:not(.done){border-style:dashed}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{font-size:12px;background:var(--bg);border-radius:99px;padding:2px 10px;color:var(--muted)}
+  .chip b{color:var(--ink)}
+
+  .per{margin-top:8px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .per b{color:var(--ink);min-width:20px;text-align:center}
+  .per button{padding:0 9px;line-height:24px;border-radius:8px}
+  .per span{font-size:11px}
+  .toggle{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-weight:600;cursor:pointer;width:fit-content}
+  .toggle input{width:20px;height:20px;accent-color:var(--done)}
+  .toggle small{font-weight:400;color:var(--muted)}
+  #filStats{display:none;flex-basis:100%;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px}
+  .fil #filStats{display:grid}
+  #filSection{display:none}
+  .fil #filSection{display:block}
+  .fbar{position:relative;height:16px;background:var(--todo);border-radius:99px;margin:12px 0 6px;overflow:visible;display:flex}
+  .fbar i{display:block;height:100%}
+  .fbar i.u{background:var(--done);border-radius:99px 0 0 99px}
+  .fbar i.t{opacity:.55;background-image:repeating-linear-gradient(45deg,transparent 0 5px,rgba(255,255,255,.55) 5px 9px);border:1px solid rgba(0,0,0,.12)}
+  .fbar .own{position:absolute;top:-5px;bottom:-5px;width:3px;background:var(--ink);border-radius:2px}
+  .legend{font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+  .legend b{color:var(--ink)}
+  .spools{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 8px;font-size:13px;color:var(--muted)}
+  .spools div{display:flex;align-items:center;gap:6px}
+  .spools b{color:var(--ink);min-width:18px;text-align:center}
+  .spools button{padding:0 9px;line-height:24px;border-radius:8px}
+  .status{font-size:13px;font-weight:600;padding:6px 10px;border-radius:10px;background:var(--bg)}
+  .status.ok{color:var(--done)} .status.bad{color:var(--accent)}
+  .foot{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:13px}
+  button{font:inherit;border:1px solid var(--line);background:var(--card);padding:6px 14px;border-radius:10px;cursor:pointer}
+  button:hover{background:var(--todo)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧵 Bead Print Tracker</h1>
+  <div class="sub">Tap a plate when it finishes printing. Printed fewer beads on a plate? Use the − / + on that color first. Tap the last green plate again to undo. Progress saves automatically. Turn on <b>Track filament</b> to see grams and spools.</div>
+
+  <label class="toggle"><input type="checkbox" id="filToggle"> Track filament <small>(optional)</small></label>
+
+  <div class="hero">
+    <div class="ring">
+      <svg width="150" height="150" viewBox="0 0 150 150">
+        <circle cx="75" cy="75" r="64" fill="none" stroke="#efe7da" stroke-width="16"/>
+        <circle id="ringFg" cx="75" cy="75" r="64" fill="none" stroke="#3aa76d" stroke-width="16" stroke-linecap="round" stroke-dasharray="402.1" stroke-dashoffset="402.1" style="transition:stroke-dashoffset .4s"/>
+      </svg>
+      <div class="pct"><b id="pct">0%</b><span>beads done</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat good"><b id="sDone">0</b><span>plates printed</span></div>
+      <div class="stat warn"><b id="sLeft">0</b><span>plates left</span></div>
+      <div class="stat"><b id="sTotal">0</b><span>plates total</span></div>
+      <div class="stat good"><b id="sBeads">0</b><span>beads printed</span></div>
+      <div class="stat warn"><b id="sBeadsLeft">0</b><span>beads left</span></div>
+      <div class="stat"><b id="sColors">0</b><span>color batches finished</span></div>
+    </div>
+    <div id="filStats"></div>
+    <div class="wide">
+      <small><span>Plates</span><span id="barTxt"></span></small>
+      <div class="bar"><i id="barFill" style="width:0"></i></div>
+    </div>
+  </div>
+
+  <h2>Big beads <small>12 per plate</small></h2>
+  <div class="grid" id="gridBig"></div>
+
+  <h2>Small beads <small>25 per plate</small></h2>
+  <div class="grid" id="gridSmall"></div>
+
+  <div id="filSection">
+    <h2>Filament <small>by color · big and small beads share the same spool</small></h2>
+    <div class="grid" id="gridFil"></div>
+  </div>
+
+  <div class="foot">
+    <button id="reset">Reset all progress</button>
+    <span>Beads are grouped by color across all characters so each color prints together.</span>
+  </div>
+</div>
+
+<script>
+/* ===== EDIT YOUR COUNTS HERE =====  [character, color, size, quantity] */
+const ORDERS = [
+  ["Possan","White","big",16],["Possan","Black","big",6],["Possan","Grey","big",56],
+  ["Possan","Dark Grey","big",16],["Possan","Pink","big",23],
+  ["Fox","White","big",14],["Fox","Orange","big",92],["Fox","Black","big",19],
+  ["Christmas Droopy","White","big",49],["Christmas Droopy","Peach","big",9],
+  ["Christmas Droopy","Red","big",16],["Christmas Droopy","Black","big",19],
+  ["Christmas Droopy","Green","big",8],
+  ["Courage","Pink","big",47],["Courage","Pink","small",32],["Courage","Brown","big",3],
+  ["Courage","Brown","small",20],["Courage","Black","big",2],["Courage","White","big",6]
+];
+const PER_PLATE = {big:12, small:25};
+const COLORS = {White:"#ffffff",Black:"#262626",Grey:"#9aa0a6","Dark Grey":"#55595e",Pink:"#f7a1c4",
+  Orange:"#f58a1f",Peach:"#ffc9a8",Red:"#d93a3a",Green:"#3a9d5d",Brown:"#8a5a3b"};
+const KEY = "beadTracker.v2";
+
+/* group by color + size */
+const groups = [];
+ORDERS.forEach(([ch,color,size,qty])=>{
+  let g = groups.find(x=>x.color===color && x.size===size);
+  if(!g){ g={id:color+"|"+size,color,size,cap:PER_PLATE[size],total:0,from:[]}; groups.push(g); }
+  g.total += qty; g.from.push([ch,qty]);
+});
+
+/* state: printed[id] = beads on each finished plate (e.g. [9,9,12]); per[id] = beads per plate for this color */
+let st = {printed:{}, per:{}};
+try{ st = JSON.parse(localStorage.getItem(KEY)) || st; }catch(e){}
+st.spools = st.spools||{}; st.filOn = !!st.filOn;
+const save = ()=>localStorage.setItem(KEY, JSON.stringify(st));
+const sum = a=>a.reduce((x,y)=>x+y,0);
+const perOf = g => Math.min(g.cap, Math.max(1, st.per[g.id]||g.cap));
+
+/* full plate list for a group: finished plates first, then planned ones */
+function plan(g){
+  const printed = (st.printed[g.id]||[]).slice();
+  let rem = Math.max(0, g.total - sum(printed));
+  const n = perOf(g), planned=[];
+  while(rem>0){ const c=Math.min(n,rem); planned.push(c); rem-=c; }
+  return {printed, planned, all:printed.concat(planned)};
+}
+
+
+/* ===== filament ===== */
+// Measured: 12 big = 140.63 g, 9 big = 105.81 g  -> straight line through both. 25 small = 102.9 g.
+const B_SLOPE = (140.63-105.81)/3, B_INT = 140.63-12*B_SLOPE, G_SMALL = 102.9/25;
+const SPOOLS = {k:1000, q:250};
+const plateG = (g,c)=> c<=0 ? 0 : g.size==="small" ? c*G_SMALL : B_INT+B_SLOPE*c;
+const colorList = [...new Set(groups.map(g=>g.color))];
+const fmt = n => Math.round(n).toLocaleString()+" g";
+function filData(color){
+  let used=0,todo=0;
+  groups.filter(g=>g.color===color).forEach(g=>{
+    const {printed,planned}=plan(g);
+    used+=sum(printed.map(c=>plateG(g,c))); todo+=sum(planned.map(c=>plateG(g,c)));
+  });
+  const sp = st.spools[color]||{k:0,q:0};
+  const owned = SPOOLS.k*sp.k + SPOOLS.q*sp.q;
+  return {color,used,todo,sp,owned,left:owned-used,short:todo-(owned-used)};
+}
+function buyText(short){
+  let k=Math.floor(short/1000), q=Math.ceil((short-1000*k)/250);
+  if(q>=4){k++;q=0}
+  return [k?k+" × 1 kg":"", q?q+" × 250 g":""].filter(Boolean).join(" + ");
+}
+function renderFil(){
+  document.body.classList.toggle("fil", st.filOn);
+  document.getElementById("filToggle").checked = st.filOn;
+  if(!st.filOn) return;
+  const host = document.getElementById("gridFil"); host.innerHTML="";
+  const all = colorList.map(filData);
+  all.forEach(f=>{
+    const scale = Math.max(f.owned, f.used+f.todo, 1);
+    const pu=f.used/scale*100, pt=f.todo/scale*100;
+    const status = f.owned===0
+      ? `<div class="status bad">No spools added yet · need ${fmt(f.used+f.todo)} → ${buyText(f.used+f.todo)}</div>`
+      : f.short>0
+        ? `<div class="status bad">⚠ Short ${fmt(f.short)} → buy ${buyText(f.short)}</div>`
+        : `<div class="status ok">✓ Enough · ${fmt(-f.short)} spare after finishing</div>`;
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`<div class="head"><div class="dot" style="background:${COLORS[f.color]}"></div>
+      <div><h3>${f.color}</h3><p>needs ${fmt(f.used+f.todo)} in total</p></div>
+      <div class="mini"><b>${fmt(Math.max(0,f.left))}</b>on spool(s)</div></div>
+      <div class="fbar"><i class="u" style="width:${pu}%"></i><i class="t" style="width:${pt}%;background-color:${COLORS[f.color]}"></i>${f.owned?`<span class="own" style="left:calc(${f.owned/scale*100}% - 1px)" title="Filament you own"></span>`:""}</div>
+      <div class="legend"><span>■ used <b>${fmt(f.used)}</b></span><span>▨ still to print <b>${fmt(f.todo)}</b></span><span>▏owned <b>${fmt(f.owned)}</b></span></div>
+      <div class="spools">
+        <div>1 kg spools <button data-spool="k" data-d="-1" data-c="${f.color}">−</button><b>${f.sp.k}</b><button data-spool="k" data-d="1" data-c="${f.color}">+</button></div>
+        <div>250 g spools <button data-spool="q" data-d="-1" data-c="${f.color}">−</button><b>${f.sp.q}</b><button data-spool="q" data-d="1" data-c="${f.color}">+</button></div>
+      </div>${status}`;
+    host.appendChild(card);
+  });
+  const used=sum(all.map(f=>f.used)), todo=sum(all.map(f=>f.todo)), shortAll=sum(all.map(f=>Math.max(0,f.short)));
+  document.getElementById("filStats").innerHTML=
+    `<div class="stat good"><b>${fmt(used)}</b><span>filament used</span></div>
+     <div class="stat warn"><b>${fmt(todo)}</b><span>filament still to print</span></div>
+     <div class="stat"><b>${fmt(used+todo)}</b><span>filament total</span></div>
+     <div class="stat ${shortAll?"warn":"good"}"><b>${shortAll?fmt(shortAll):"✓ 0 g"}</b><span>short (need to buy)</span></div>`;
+}
+
+function render(){
+  let plates=0, pd=0, beads=0, bd=0, finished=0;
+  const nextG = groups.find(g=>plan(g).planned.length>0);
+  ["big","small"].forEach(size=>{
+    const host = document.getElementById(size==="big"?"gridBig":"gridSmall");
+    host.innerHTML = "";
+    groups.filter(g=>g.size===size).forEach(g=>{
+      const {printed,planned,all} = plan(g);
+      const d = printed.length, n = perOf(g);
+      plates+=all.length; pd+=d; beads+=g.total; bd+=Math.min(g.total,sum(printed));
+      const isDone = planned.length===0;
+      if(isDone) finished++;
+      const card = document.createElement("div");
+      card.className = "card"+(g===nextG?" next":"")+(isDone?" complete":"");
+      const badge = g===nextG ? '<span class="badge">PRINT NEXT</span>' : isDone ? '<span class="badge ok">✓ DONE</span>' : '';
+      const plateHtml = all.map((c,i)=>
+        `<div class="plate${i<d?" done":""}${c<g.cap?" partial":""}" data-g="${g.id}" data-i="${i}" title="Plate ${i+1}: ${c} beads"><span>#${i+1}</span><b>${c}</b></div>`).join("");
+      const chips = g.from.map(([c,q])=>`<span class="chip">${c} <b>${q}</b></span>`).join("");
+      card.innerHTML = `${badge}
+        <div class="head">
+          <div class="dot" style="background:${COLORS[g.color]}"></div>
+          <div><h3>${g.color}</h3><p>${sum(printed)} / ${g.total} beads · ${all.length} plate${all.length>1?"s":""}</p></div>
+          <div class="mini"><b>${d}/${all.length}</b>plates</div>
+        </div>
+        <div class="bar"><i style="width:${Math.min(100,sum(printed)/g.total*100)}%"></i></div>
+        <div class="plates">${plateHtml}</div>
+        <div class="per">Beads per plate
+          <button data-step="-1" data-g="${g.id}">−</button><b>${n}</b><button data-step="1" data-g="${g.id}">+</button>
+          <span>(sets the size of plates you tap next)</span></div>
+        <div class="chips">${chips}</div>`;
+      host.appendChild(card);
+    });
+  });
+  const p = bd/beads;
+  const pp = pd/plates;
+  document.getElementById("pct").textContent = Math.round(p*100)+"%";
+  document.getElementById("ringFg").style.strokeDashoffset = 402.1*(1-p);
+  sDone.textContent=pd; sLeft.textContent=plates-pd; sTotal.textContent=plates;
+  sBeads.textContent=bd; sBeadsLeft.textContent=beads-bd;
+  sColors.textContent=finished+" / "+groups.length;
+  barFill.style.width=(pp*100)+"%"; barTxt.textContent=pd+" of "+plates;
+  renderFil();
+}
+
+document.getElementById("filToggle").onchange=e=>{ st.filOn=e.target.checked; save(); render(); };
+document.addEventListener("click",e=>{
+  const sb = e.target.closest("[data-spool]");
+  if(sb){
+    const c=sb.dataset.c, sp=st.spools[c]=st.spools[c]||{k:0,q:0};
+    sp[sb.dataset.spool]=Math.max(0,sp[sb.dataset.spool]+ +sb.dataset.d);
+    save(); render(); return;
+  }
+  const stp = e.target.closest("[data-step]");
+  if(stp){
+    const g = groups.find(x=>x.id===stp.dataset.g);
+    st.per[g.id] = Math.min(g.cap, Math.max(1, perOf(g)+ +stp.dataset.step));
+    save(); render(); return;
+  }
+  const el = e.target.closest(".plate"); if(!el) return;
+  const g = groups.find(x=>x.id===el.dataset.g), i = +el.dataset.i;
+  const {printed,all} = plan(g), d = printed.length;
+  if(i+1===d) st.printed[g.id] = printed.slice(0,i);              // tap last green plate = undo
+  else if(i<d) st.printed[g.id] = printed.slice(0,i+1);            // tap earlier green plate = undo later ones
+  else st.printed[g.id] = all.slice(0,i+1);                        // mark up to this plate as printed
+  save(); render();
+});
+document.getElementById("reset").onclick=()=>{
+  if(confirm("Reset all printing progress?")){ st.printed={}; st.per={}; save(); render(); }
+};
+render();
+</script>
+</body>
+</html>
